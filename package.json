@@ -1,0 +1,21 @@
+{
+  "name": "k4",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/MrDenza/NodeJS__Lessons#readme",
+  "bugs": {
+    "url": "https://github.com/MrDenza/NodeJS__Lessons/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrDenza/NodeJS__Lessons.git"
+  },
+  "license": "ISC",
+  "author": "Denza",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {},
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
