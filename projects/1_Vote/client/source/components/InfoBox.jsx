@@ -19,6 +19,6 @@ function InfoBox (props) {
             <td>{`${props.votes} ${getNumWord(props.votes)}`}</td>
         </tr>
     );
-};
+}
 
 export default memo(InfoBox);
