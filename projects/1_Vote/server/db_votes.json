@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "NodeJs",
+    "votes": 3
+  },
+  {
+    "id": 2,
+    "name": "Java",
+    "votes": 4
+  },
+  {
+    "id": 3,
+    "name": "C++",
+    "votes": 5
+  },
+  {
+    "id": 4,
+    "name": "Assembler",
+    "votes": 6
+  }
+]
