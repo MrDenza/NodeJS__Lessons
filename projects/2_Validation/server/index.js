@@ -39,110 +39,45 @@ WEBSERVER.get('/', (req, res) => {
     const hasQueryParams = Object.keys(req.query).length > 0;
 
     // Защита от undefined
-    const {
-        name = '',
-        age = '',
-        email = ''
-    } = hasQueryParams ? req.query : {};
+    const {name = '', age = '', email = ''} = hasQueryParams ? req.query : {};
 
     // Защита от null/undefined
-    const [nameUser, ageUser, emailUser] = [name, age, email]
-    .map(param => (param || '').toString().trim());
+    const [nameUser, ageUser, emailUser] = [name, age, email].map(param => (param || '').toString().trim());
 
     const [errValidName, errValidAge, errValidEmail] = hasQueryParams
         ? [validName(nameUser), validAge(ageUser), validEmail(emailUser)]
         : ['', '', ''];
 
+    let keyAllValid = false;
+
+    const fields = [
+        { type: 'text', id: 'name', title: 'Имя', value: nameUser, err: errValidName },
+        { type: 'number', id: 'age', title: 'Возраст', value: ageUser, err: errValidAge },
+        { type: 'text', id: 'email', title: 'Email', value: emailUser, err: errValidEmail }
+    ];
+
     if (hasQueryParams && !errValidName && !errValidAge && !errValidEmail) {
         logLineSync(logFN,`[${req.ip}] [VALID] - ${JSON.stringify(req.query)}`);
-
-        res.send(`
-            <div style="text-align: center">
-                <h2>Все поля валидны!</h2>
-                <table style="display: inline-block">
-                    <tr>
-                        <td>
-                            <b>Имя:</b>
-                        </td>
-                        <td>${escapeHTML(nameUser)}</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <b>Возраст:</b>
-                        </td>
-                        <td>${escapeHTML(ageUser)}</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <b>Email:</b>
-                        </td>
-                        <td>${escapeHTML(emailUser)}</td>
-                    </tr>        
-                </table>
-                <a href="/" title="Вернуться к форме для валидации" style="display: block; margin-top: 20px"><button>Назад</button></a>
-            </div>
-        `);
-
-    } else {
-        if (hasQueryParams) logLineSync(logFN,`[${req.ip}] [NO-VALID] - ${JSON.stringify(req.query)}`);
-
-        res.send(`
-           <div style="text-align: center">
-                <h2>Валидация полей:</h2>
-                <form method="get" action="/" style="display: inline-block">
-                    <table style="width: 350px">
-                        <tr>
-                            <td>
-                                <label for="name">
-                                    <b>Имя:</b>
-                                </label>
-                            </td>
-                            <td >
-                                <input type="text" id="name" name="name" value="${nameUser}" style="width: 100%"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="text-align: center; color: red">
-                                <i>${errValidName}</i>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="age">
-                                    <b>Возраст:</b>
-                                </label>
-                            </td>
-                            <td>
-                                <input type="number" id="age" name="age" value="${ageUser}" style="width: 100%"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="text-align: center; color: red">
-                                <i>${errValidAge}</i>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="email">
-                                    <b>Email:</b>
-                                </label>
-                            </td>
-                            <td>
-                                <input type="text" id="email" name="email" value="${emailUser}" style="width: 100%"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="text-align: center; color: red">
-                                <i>${errValidEmail}</i>
-                            </td>
-                        </tr>
-                    </table>
-                    <input type="submit" value="Проверить" style="margin-top: 20px">
-                </form>
-            </div>
-        `);
-
+        keyAllValid = true;
     }
+
+    if (hasQueryParams) logLineSync(logFN,`[${req.ip}] [NO-VALID] - ${JSON.stringify(req.query)}`);
+
+    const tableContent = fields.map(field =>
+        trBlockHtml(keyAllValid, field.type, field.id, field.title, field.value, field.err)
+    ).join('');
+
+    res.send(`
+       <div style="text-align: center">
+            <h2>${keyAllValid ? 'Все поля валидны!' : 'Валидация полей'}</h2>
+            <form method="get" action="/" style="display: inline-block">
+                <table ${keyAllValid ? '' : 'style="width: 350px"'}>${tableContent}</table>
+                ${keyAllValid ? 
+                    '<a href="/" title="Вернуться к форме для валидации" style="display: block; margin-top: 20px"><button>Назад</button></a>' 
+                    : '<input type="submit" value="Проверить" style="margin-top: 20px">'}
+            </form>
+        </div>
+    `);
 });
 
 WEBSERVER.use((req, res) => {
@@ -152,6 +87,36 @@ WEBSERVER.use((req, res) => {
 WEBSERVER.listen(PORT, () => {
     console.log('WebServer running on port ' + PORT);
 });
+
+function trBlockHtml(keyView, typePos = 'text', idTag, title, valuePos = '', errMsg = '') {
+    const inputField = `
+        <input 
+            type="${typePos}" 
+            id="${idTag}" 
+            name="${idTag}" 
+            value="${valuePos}" 
+            style="width: 100%" 
+            title="${title}"
+        />
+    `;
+
+    return (`
+        <tr>
+            <td><b>${title}:</b></td>
+            <td>
+                <label for="${idTag}"></label>
+                ${keyView ? escapeHTML(valuePos) : inputField}
+            </td>
+        </tr>
+        ${!keyView && errMsg ? `
+            <tr>
+                <td colSpan="2" style="text-align: center; color: red">
+                    <i>${errMsg}</i>
+                </td>
+            </tr>
+        ` : ''}
+    `);
+}
 
 function validName (eName) {
     const MIN_LENGTH = 2;
@@ -174,27 +139,27 @@ function validEmail(eMail) {
     return '';
 }
 
-function validAge (eAge) {
+function validAge(eAge) {
     const MIN_AGE = 18;
     const MAX_AGE = 100;
     let ageNum = Number(eAge);
 
-    if(eAge.length === 0) return ERR_VALID.nullField;
-    if(isNaN(ageNum)) return ERR_VALID.age.nan;
-    if(ageNum < 0) return ERR_VALID.age.negative;
-    if(ageNum < MIN_AGE) return ERR_VALID.age.min;
-    if(ageNum > MAX_AGE) return ERR_VALID.age.max;
-    return '';
+    if (eAge.length === 0) return ERR_VALID.nullField;
+    if (isNaN(ageNum)) return ERR_VALID.age.nan;
+    if (ageNum < 0) return ERR_VALID.age.negative;
+    if (ageNum < MIN_AGE) return ERR_VALID.age.min;
+    if (ageNum > MAX_AGE) return ERR_VALID.age.max;
+    return "";
 }
 
-function logLineSync(logFilePath,logLine) {
+function logLineSync(logFilePath, logLine) {
     const logDT = new Date();
-    let time = logDT.toLocaleDateString()+" "+logDT.toLocaleTimeString();
-    let fullLogLine=time+" "+logLine;
+    let time = logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
+    let fullLogLine = time + " " + logLine;
 
     console.log(fullLogLine);
 
-    const logFd = fs.openSync(logFilePath, 'a+');
+    const logFd = fs.openSync(logFilePath, "a+");
     fs.writeSync(logFd, fullLogLine + os.EOL);
     fs.closeSync(logFd);
 }
