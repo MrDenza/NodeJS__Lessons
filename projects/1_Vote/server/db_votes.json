@@ -2,21 +2,21 @@
   {
     "id": 1,
     "name": "NodeJs",
-    "votes": 3
+    "votes": 7
   },
   {
     "id": 2,
     "name": "Java",
-    "votes": 4
+    "votes": 5
   },
   {
     "id": 3,
     "name": "C++",
-    "votes": 5
+    "votes": 6
   },
   {
     "id": 4,
     "name": "Assembler",
-    "votes": 6
+    "votes": 11
   }
 ]

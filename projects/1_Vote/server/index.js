@@ -52,6 +52,7 @@ webserver.get('/', (req, res) => {
 });
 
 webserver.get('/:path/:file', (req, res) => {
+	if (req.originalUrl.includes('..')) res.status(400).send('Я у мамы хакер :3');
 	console.log('[GET] Запрошен файл: ' + req.originalUrl);
 	res.sendFile(req.params.file, { root: path.join((__dirname, `../client/public/${req.params.path}`)) });
 });
@@ -103,14 +104,12 @@ webserver.post('/stat', (req, res) => {
 
 
 webserver.post('/vote', (req, res) => {
-
 	readJsonFileAsync(DB_VOTES_PATH,(error, data) => {
 		if (error) {
 			res.status(404).send(error);
 		} else {
-			let cloneData = [...data];
-			cloneData[cloneData.findIndex(elem => elem.id === req.body.idVote)].votes++;
-			writeJsonFileAsync(DB_VOTES_PATH, cloneData, (error) => {
+			data[data.findIndex(elem => elem.id === req.body.idVote)].votes++
+			writeJsonFileAsync(DB_VOTES_PATH, data, (error) => {
 				if (error) res.status(403).send(error)
 				else res.send()
 			});
@@ -121,7 +120,11 @@ webserver.post('/vote', (req, res) => {
 	// const findPosObj = DB_VOTES[DB_VOTES.findIndex(elem => elem.id === req.body.idVote)].votes++;
 	// console.log(`[POST] Записан вариант ответа для ID: ${req.body.idVote}.`);
 	// res.send();
-})
+});
+
+webserver.use((req, res) => {
+	res.status(404).send('Страница не найдена.');
+});
 
 webserver.listen(port, () => {
 	console.log("WebServer running on port " + port);
