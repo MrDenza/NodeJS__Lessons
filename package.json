@@ -19,7 +19,8 @@
   ],
   "main": "index.js",
   "scripts": {
-    "project1-dev": "concurrently \"npm run dev --workspace=projects/1_Vote/server\" \"npm run start --workspace=projects/1_Vote/client\""
+    "project1-dev": "concurrently \"npm run dev --workspace=projects/1_Vote/server\" \"npm run start --workspace=projects/1_Vote/client\"",
+    "project2-dev": "npm run dev --workspace=projects/2_Validation/server"
   },
   "dependencies": {
     "express": "^4.21.2",
