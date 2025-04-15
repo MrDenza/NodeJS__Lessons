@@ -20,7 +20,8 @@
   "main": "index.js",
   "scripts": {
     "project1-dev": "concurrently \"npm run dev --workspace=projects/1_Vote/server\" \"npm run start --workspace=projects/1_Vote/client\"",
-    "project2-dev": "npm run dev --workspace=projects/2_Validation/server"
+    "project2-dev": "npm run dev --workspace=projects/2_Validation/server",
+    "project3-dev": "concurrently \"npm run dev --workspace=projects/3_Vote-2/server\" \"npm run start --workspace=projects/3_Vote-2/client\""
   },
   "dependencies": {
     "express": "^4.21.2",
