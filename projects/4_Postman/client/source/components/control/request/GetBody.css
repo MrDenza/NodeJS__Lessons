@@ -1,0 +1,13 @@
+.get-body__box {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	gap: 10px
+}
+.get-body__title {
+	font-weight: bold;
+}
+.get-body__table {
+	width: 100%;
+}

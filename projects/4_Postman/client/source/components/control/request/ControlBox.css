@@ -1,0 +1,39 @@
+.control-box__form {
+	display: flex;
+	justify-content: stretch;
+	align-items: stretch;
+	flex-direction: column;
+	gap: 10px;
+}
+.control-box__form table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	border: 0;
+}
+.control-box__form td, .control-box__form th {
+	border: 0;
+	padding: 5px;
+}
+.control-box__form hr {
+	 width: 100%;
+}
+.control-box__table{
+	width: 100%;
+	text-align: left;
+}
+.control-box__table-method{
+	width: 30%;
+}
+.control-box__table-url {
+	width: 70%;
+}
+.table-method__input {
+	width: 100%;
+}
+.table-url__input {
+	width: 99%;
+}
+.control-box__btn {
+	display: flex;
+	justify-content: space-evenly;
+}

@@ -1,0 +1,13 @@
+.control-box {
+	width: 60%;
+	margin: 5px;
+	padding: 10px;
+	border: 1px green solid;
+	border-radius: 10px;
+	box-sizing: border-box;
+}
+.control-box__title {
+	display: block;
+	text-align: center;
+	font-weight: bold;
+}
