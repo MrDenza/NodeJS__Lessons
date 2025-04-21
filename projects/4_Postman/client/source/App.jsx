@@ -15,20 +15,29 @@ import ControlBody from "./components/control/ControlBody";
 
 let DATA_LIST = {}
 let DATA_REQ = {
-	method: "post",
-	url: "http:/",
-	body: {"key": "test"},
-	headers: {"Content-Type": "application/json"}
+	//method: "post",
+	//url: "http:/",
+	// query: [
+	// 	{key: 1},
+	// 	{aga: 2},
+	// 	{privet: "test"},
+	// ],
+	// body: '"{"test1": "123", "test2": ["boy","girl"]}"',
+	// headers: [
+	// 	{"Content-Type": "application/json"},
+	// 	{'Accept': 'true'},
+	// ]
 };
 let DATA_RES = {};
 
 const BLANK_DATA_RES = {};
-const BLANK_DATA_REQ = {
-	method: "",
-	url: "",
-	body: {},
-	headers: {}
-}
+// const BLANK_DATA_REQ = {
+// 	method: "",
+// 	url: "",
+// 	query: [],
+// 	body: '',
+// 	headers: []
+// }
 
 function App() {
 
@@ -37,12 +46,12 @@ function App() {
 	const [dataRes, setDataRes] = useState(DATA_RES);
 
 	const updateDataReq = (newData) => {
-		setDataReq({...dataReq, ...newData});
+		//setDataReq({...dataReq, ...newData});
 	};
 
 	const resetDataReq = () => {
-		setDataReq(BLANK_DATA_REQ);
-		setDataRes(BLANK_DATA_RES);
+		// setDataReq(BLANK_DATA_REQ);
+		// setDataRes(BLANK_DATA_RES);
 	}
 
 	const saveDataReq = (data) => {

@@ -9,6 +9,7 @@
 	border-collapse: collapse;
 	border-spacing: 0;
 	border: 0;
+	width: 100%;
 }
 .control-box__form td, .control-box__form th {
 	border: 0;

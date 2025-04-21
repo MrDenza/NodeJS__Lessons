@@ -1,29 +1,44 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import './ControlBox.css';
 import GetBody from "./GetBody";
 import PostBody from "./PostBody";
 import HeadersBody from "./HeadersBody";
 
-const METHOD_LIST = ['GET', 'POST'];
+const METHOD_LIST = [
+    '',
+    'GET',
+    'POST',
+];
+const HEADERS_LIST = [
+    '',
+    'Accept',
+    'Cookie',
+    'Content-Encoding',
+    'Content-Language',
+    'Content-Type',
+];
 
 function ControlBox (props) {
 
-    //props.dataReq
-    //props.updateDataReq
-    //props.resetDataReq
-    //props.saveDataReq
-    const METHOD_NAME = props.dataReq.method?.toUpperCase();
+    const [dataReq, setDataReq] = useState(props.dataReq);
+    const METHOD_NAME = dataReq.method?.toUpperCase() || '';
 
+    useEffect(() => {
+        //console.log(props.dataReq);
+        setDataReq(props.dataReq);
+    }, [props.dataReq]);
+    // ----- FUNC FORM -----
     const submitForm = (eo) => {
         eo.preventDefault();
         console.log('submit');
-
+        props.updateDataReq(dataReq);
     };
 
     const resetForm = (eo) => {
         eo.preventDefault();
         console.log('reset');
-        props.resetDataReq();
+        setDataReq({});
+        //props.resetDataReq();
     };
 
     const saveForm = () => {
@@ -31,24 +46,87 @@ function ControlBox (props) {
         console.log(props.dataReq);
         //props.saveDataReq(data);
     };
-
-
-    
+    // ----- FUNC METHOD -----
     const updateMethod = (eo) => {
-        props.updateDataReq({method: eo.target.value});
-        //console.log(eo.target.value);
-    }
-
+        const newMethod = eo.target.value.toLowerCase();
+        setDataReq(prevDataReq => {
+            const newDataReq = { ...prevDataReq, method: newMethod };
+            if (newMethod === 'get') {
+                if ('body' in newDataReq) {
+                    newDataReq.body = '';
+                }
+            } else {
+                if ('query' in newDataReq) {
+                    newDataReq.query = [];
+                }
+            }
+            return newDataReq;
+        });
+    };
+    // ----- FUNC URL -----
     const updateUrl = (eo) => {
-        console.log(eo.target.value);
-        //props.updateDataReq({url: eo.target.value});
-    }
+        setDataReq({...dataReq, ...{url: eo.target.value}});
+    };
+    // ----- FUNC QUERY/HEADERS -----
+    const handleChangeUniversal = (id, field, newValue, isOptions) => {
+        const key = isOptions ? 'headers' : 'query';
+        console.log(`Изменяем ${key}, поле - ${field}, у id - ${id}, на - ${newValue}`);
 
+        setDataReq(prevDataReq => {
+            const newArray = [...prevDataReq[key]];
+            const oldObj = { ...newArray[id] };
+            const newObj = { ...oldObj };
+
+            if (field === 'name') {
+                const oldKey = Object.keys(oldObj)[0];
+                newObj[newValue] = oldObj[oldKey];
+                delete newObj[oldKey];
+            } else if (field === 'value') {
+                const currentKey = Object.keys(oldObj)[0];
+                newObj[currentKey] = newValue;
+            }
+
+            newArray[id] = newObj;
+            return { ...prevDataReq, [key]: newArray };
+        });
+    };
+
+    const handleDeleteUniversal = (eo, id, isOptions) => {
+        eo.preventDefault();
+        const key = isOptions ? 'headers' : 'query';
+        console.log(`Удалён элемент из ${key} с id: ${id + 1}`);
+
+        setDataReq(prevDataReq => ({
+            ...prevDataReq,
+            [key]: prevDataReq[key].filter((_, index) => index !== id)
+        }));
+    };
+
+    const handleAddUniversal = (eo, isOptions) => {
+        eo.preventDefault();
+        const key = isOptions ? 'headers' : 'query';
+        console.log(`Добавлен новый элемент в ${key}`);
+
+        setDataReq(prevDataReq => {
+            const prevArray = Array.isArray(prevDataReq[key]) ? prevDataReq[key] : [];
+            return {
+                ...prevDataReq,
+                [key]: [...prevArray, { '': '' }]
+            };
+        });
+    };
+    // ----- FUNC BODY -----
+    const handleChangeBody = (newValue) => {
+        setDataReq(prevDataReq => (
+            {...prevDataReq, body: newValue}
+        ));
+    };
+    // ----- FUNC OTHER -----
     const optionList = METHOD_LIST.map((pos, index) => {
         return <option key={index} value={pos}>{pos}</option>
     });
 
-    console.log(props.dataReq);
+    console.log(dataReq);
     return (
         <form id={'formReq'} onSubmit={submitForm} onReset={resetForm} className={'control-box__form'}>
             <table className={'control-box__table'}>
@@ -66,16 +144,15 @@ function ControlBox (props) {
                             </select>
                         </td>
                         <td>
-                            <input type={"text"} id={'url'} className={'table-url__input'} value={props.dataReq.url} onChange={updateUrl}/>
+                            <input type={"text"} id={'url'} className={'table-url__input'} value={dataReq?.url || ''} onChange={updateUrl}/>
                         </td>
                     </tr>
                 </tbody>
             </table>
             <hr/>
-            {(METHOD_NAME === 'GET') && (<GetBody/>)}
-            {(METHOD_NAME === 'POST') && (<PostBody/>)}
-            {/*<HeadersBody/>*/}
-            <hr/>
+            {(METHOD_NAME === 'GET') && (<GetBody data={dataReq?.query} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>)}
+            {(METHOD_NAME === 'POST') && (<PostBody body={dataReq?.body} onChange={handleChangeBody}/>)}
+            {(METHOD_NAME) && (<HeadersBody data={dataReq?.headers} headers={HEADERS_LIST} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>)}
             <div className={'control-box__btn'}>
                 <button type={'button'} onClick={saveForm}>Сохранить запрос</button>
                 <button type={'submit'}>Отправить запрос</button>

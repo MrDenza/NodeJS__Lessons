@@ -6,8 +6,7 @@
 	gap: 10px
 }
 .get-body__title {
+	display: block;
+	text-align: center;
 	font-weight: bold;
-}
-.get-body__table {
-	width: 100%;
 }
