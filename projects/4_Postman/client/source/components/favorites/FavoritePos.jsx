@@ -14,12 +14,8 @@ function FavoritePos (props) {
 
     const method = props.method?.toUpperCase();
 
-    const openPosition = (idPos) => {
-        console.log('aga ' + idPos);
-    };
-
     return (
-        <div className={`favorite-pos ${classNameForMethod(method)}`} onClick={() => {openPosition(props.idPos)}}>
+        <div className={`favorite-pos ${classNameForMethod(method)}`} onClick={() => {props.openPosition(props.idPos)}}>
             <span className={'favorite-pos_text-bold'}>Метод: {method}</span>
             <span>{props.url}</span>
         </div>

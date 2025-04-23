@@ -13,55 +13,81 @@ import ControlBody from "./components/control/ControlBody";
 // 	download: '/download',
 // }
 
-let DATA_LIST = {}
-let DATA_REQ = {
-	//method: "post",
-	//url: "http:/",
-	// query: [
-	// 	{key: 1},
-	// 	{aga: 2},
-	// 	{privet: "test"},
-	// ],
-	// body: '"{"test1": "123", "test2": ["boy","girl"]}"',
-	// headers: [
-	// 	{"Content-Type": "application/json"},
-	// 	{'Accept': 'true'},
-	// ]
-};
+let DATA_LIST = [
+	{
+		method: "post",
+		url: "http:/",
+		query: [
+		],
+		body: '"{"test1": "123", "test2": ["boy","girl"]}"',
+		headers: [
+			{"Content-Type": "application/json"},
+			{'Accept': 'true'},
+		]
+	},
+	{
+		method: "get",
+		url: "http:/",
+		query: [
+			{key: 1},
+			{aga: 2},
+			{privet: "test"},
+		],
+		headers: [
+			{"Content-Type": "application/json"},
+		]
+	},
+	{
+		method: "get",
+		url: "http:/",
+		query: [
+			{key: 1},
+		],
+		headers: [
+			{'Accept': 'true'},
+		]
+	},
+]
+// let DATA_REQ = {
+// 	method: "post",
+// 	url: "http:/",
+// 	query: [
+// 		{key: 1},
+// 		{aga: 2},
+// 		{privet: "test"},
+// 	],
+// 	body: '"{"test1": "123", "test2": ["boy","girl"]}"',
+// 	headers: [
+// 		{"Content-Type": "application/json"},
+// 		{'Accept': 'true'},
+// 	]
+// };
 let DATA_RES = {};
-
-const BLANK_DATA_RES = {};
-// const BLANK_DATA_REQ = {
-// 	method: "",
-// 	url: "",
-// 	query: [],
-// 	body: '',
-// 	headers: []
-// }
 
 function App() {
 
-	const [dataList, setDataList] = useState(DATA_LIST);
-	const [dataReq, setDataReq] = useState(DATA_REQ);
+	const [dataList, setDataList] = useState(DATA_LIST); // []
+    const [dataReq, setDataReq] = useState({});
 	const [dataRes, setDataRes] = useState(DATA_RES);
 
 	const updateDataReq = (newData) => {
-		//setDataReq({...dataReq, ...newData});
+		console.log('submit');
+		setDataReq({...newData});
 	};
-
-	const resetDataReq = () => {
-		// setDataReq(BLANK_DATA_REQ);
-		// setDataRes(BLANK_DATA_RES);
-	}
 
 	const saveDataReq = (data) => {
-
+		console.log('save');
+		setDataList(prevDataList => [...prevDataList, data]);
 	};
+
+	const openFavoriteReq = (id) => {
+		setDataReq(dataList[id]);
+	}
 
 	return (
 		<div className="container">
-			<FavoritesList dataList={dataList}/>
-			<ControlBody dataReq={dataReq} dataRes={dataRes} updateDataReq={updateDataReq} resetDataReq={resetDataReq} saveDataReq={saveDataReq}/>
+			<FavoritesList dataList={dataList} openPosition={openFavoriteReq}/>
+			<ControlBody dataReq={dataReq} dataRes={dataRes} updateDataReq={updateDataReq} saveDataReq={saveDataReq}/>
 		</div>
 	);
 }

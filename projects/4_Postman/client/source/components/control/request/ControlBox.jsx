@@ -1,50 +1,186 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { Fragment, memo, useEffect, useState } from "react";
 import './ControlBox.css';
 import GetBody from "./GetBody";
 import PostBody from "./PostBody";
 import HeadersBody from "./HeadersBody";
 
 const METHOD_LIST = [
-    '',
     'GET',
     'POST',
 ];
 const HEADERS_LIST = [
-    '',
     'Accept',
     'Cookie',
     'Content-Encoding',
     'Content-Language',
     'Content-Type',
 ];
+const BLANK_DATA_REQ = {
+    method: '',
+    url: '',
+    query: [],
+    body: '',
+    headers: [],
+}
+const ERRORS_MSG_LIST = {
+    method: {
+        nullField: 'Выберите метод запроса!',
+        noValidMethod: 'Выбранный метод не доступен!'
+    },
+    url: {
+        nullField: 'Введите URL запроса!',
+        noValidUrl: 'Некорректный формат URL!'
+    },
+    query: {
+        errTypeValue: 'Ошибка значений параметров! Удалите все пары \"ключ-значение\" и пересоздайте снова.',
+        nullField: 'Есть незаполненные поля! Заполните или удалите незаполненные пары \"ключ-значение\".',
+        duplicateKey: 'Нельзя использовать несколько пар \"ключ-значение\" с одинаковыми ключами!'
+    },
+    body: {
+        noValidBody: 'Некорректный формат JSON!',
+        noCorrectBody: 'Некорректный формат JSON! JSON должен быть объектом/массивом.'
+    },
+    headers: {
+        errTypeValue: 'Ошибка значений заголовков! Удалите все пары \"заголовок-значение\" и пересоздайте снова.',
+        nullField: 'Есть незаполненные поля! Заполните или удалите незаполненные пары \"заголовок-значение\".',
+        noValidHeader: 'Есть некорректные заголовки! Выберите заголовки из доступного списка.',
+        duplicateKey: 'Нельзя использовать несколько пар \"заголовок-значение\" с одинаковыми заголовками!'
+    }
+};
+
+const validators = {
+    method: (value) => {
+        if (!value) return ERRORS_MSG_LIST.method.nullField;
+        if (!METHOD_LIST.includes(value.toUpperCase())) {
+            return ERRORS_MSG_LIST.method.noValidMethod;
+        }
+
+        return false;
+    },
+    url: (value) => {
+        if (!value) return ERRORS_MSG_LIST.url.nullField;
+
+        if (URL.canParse) { // для современных браузеров
+            return URL.canParse(value) ? false : ERRORS_MSG_LIST.url.noValidUrl;
+        }
+
+        try {
+            new URL(value);
+            return false;
+        } catch {
+            return ERRORS_MSG_LIST.url.noValidUrl;
+        }
+    },
+    query: (value) => {
+        const isValidStructure = Array.isArray(value) &&
+            value.every(obj =>
+                typeof obj === 'object' &&
+                Object.keys(obj).length === 1
+            );
+        if (!isValidStructure) return ERRORS_MSG_LIST.query.errTypeValue;
+
+        const keys = value.map(obj => Object.keys(obj)[0]);
+        const hasDuplicates = keys.length !== new Set(keys).size;
+        if (hasDuplicates) return ERRORS_MSG_LIST.query.duplicateKey;
+
+        const hasEmptyFields = value.some(obj =>
+            Object.entries(obj).some(([k, v]) =>
+                !k.trim() || !v.toString().trim()
+            )
+        );
+        if (hasEmptyFields) return ERRORS_MSG_LIST.query.nullField;
+
+        return false;
+    },
+    body: (value) => {
+        if (!value.length) return false;
+
+        try {
+            const parsed = JSON.parse(value);
+            const isValid = typeof parsed === 'object' && parsed !== null;
+            return isValid ? false : ERRORS_MSG_LIST.body.noCorrectBody;
+        } catch {
+            return ERRORS_MSG_LIST.body.noValidBody;
+        }
+    },
+    headers: (value) => {
+        const isValidStructure = Array.isArray(value) &&
+            value.every(obj =>
+                typeof obj === 'object' &&
+                Object.keys(obj).length === 1
+            );
+        if (!isValidStructure) return ERRORS_MSG_LIST.headers.errTypeValue;
+
+        const keys = value.map(obj => Object.keys(obj)[0]);
+        const hasDuplicates = keys.length !== new Set(keys).size;
+        if (hasDuplicates) return ERRORS_MSG_LIST.headers.duplicateKey;
+
+        for (const obj of value) {
+            const [[key, val]] = Object.entries(obj);
+
+            if (!key.trim()) return ERRORS_MSG_LIST.headers.nullField;
+            if (!HEADERS_LIST.includes(key)) return ERRORS_MSG_LIST.headers.noValidHeader;
+            if (!val.toString().trim()) return ERRORS_MSG_LIST.headers.nullField;
+        }
+
+        return false;
+    }
+};
+
+function isEmptyObject(obj) {
+    return (
+        !obj || // null/undefined
+        typeof obj !== 'object' || // не объект
+        Array.isArray(obj) || // массив
+        Object.keys(obj).length === 0 // пустой объект
+    );
+}
 
 function ControlBox (props) {
 
-    const [dataReq, setDataReq] = useState(props.dataReq);
+    const [dataReq, setDataReq] = useState(BLANK_DATA_REQ);
+    const [errsDaraReq, setErrsDaraReq] = useState({});
     const METHOD_NAME = dataReq.method?.toUpperCase() || '';
 
+    // ----- SYNC GET NEW PROPS -----
     useEffect(() => {
-        //console.log(props.dataReq);
-        setDataReq(props.dataReq);
+        if (!isEmptyObject(props.dataReq)) {
+            setDataReq(props.dataReq);
+            setErrsDaraReq({});
+        }
     }, [props.dataReq]);
+    // ----- FUNC VALIDATE -----
+    const validate = (dataObj) => {
+
+        let objErrors = {};
+
+        for (let key in dataObj) {
+            let errorsElem = validators[key](dataObj[key]);
+            if (errorsElem) objErrors[key] = errorsElem;
+        }
+
+        return objErrors;
+    };
     // ----- FUNC FORM -----
     const submitForm = (eo) => {
         eo.preventDefault();
-        console.log('submit');
-        props.updateDataReq(dataReq);
+        let errors = validate(dataReq);
+        if (Object.keys(errors).length) {
+            console.log('ошибки:  ' + JSON.stringify(errors));
+        } else {
+            console.log('ошибок нет');
+        }
+        return setErrsDaraReq(errors);
+        //props.updateDataReq(dataReq);
     };
 
     const resetForm = (eo) => {
         eo.preventDefault();
-        console.log('reset');
-        setDataReq({});
-        //props.resetDataReq();
+        setDataReq(BLANK_DATA_REQ);
     };
 
     const saveForm = () => {
-        console.log('save');
-        console.log(props.dataReq);
-        //props.saveDataReq(data);
+        props.saveDataReq(dataReq);
     };
     // ----- FUNC METHOD -----
     const updateMethod = (eo) => {
@@ -62,31 +198,36 @@ function ControlBox (props) {
             }
             return newDataReq;
         });
+        setErrsDaraReq({});
     };
     // ----- FUNC URL -----
     const updateUrl = (eo) => {
-        setDataReq({...dataReq, ...{url: eo.target.value}});
+        const newVal = (typeof eo.target.value === 'string') ? eo.target.value.trim() : '';
+        setDataReq((prevDataReq) => {
+            if (prevDataReq.url === newVal) return prevDataReq
+            else return {...prevDataReq, url: newVal}
+        });
     };
     // ----- FUNC QUERY/HEADERS -----
     const handleChangeUniversal = (id, field, newValue, isOptions) => {
         const key = isOptions ? 'headers' : 'query';
-        console.log(`Изменяем ${key}, поле - ${field}, у id - ${id}, на - ${newValue}`);
+        const newVal = (typeof newValue === 'string') ? newValue.trim() : '';
 
         setDataReq(prevDataReq => {
-            const newArray = [...prevDataReq[key]];
-            const oldObj = { ...newArray[id] };
-            const newObj = { ...oldObj };
+            const newArray = JSON.parse(JSON.stringify(prevDataReq[key]));
+            const oldObj = JSON.parse(JSON.stringify(newArray[id])); // {key: 1}
+            const oldKey = Object.keys(oldObj)[0]; // key
 
             if (field === 'name') {
-                const oldKey = Object.keys(oldObj)[0];
-                newObj[newValue] = oldObj[oldKey];
-                delete newObj[oldKey];
+                if (oldKey === newVal) return prevDataReq;
+                const oldValue = oldObj[oldKey];
+                delete oldObj[oldKey];
+                oldObj[newVal] = oldValue;
             } else if (field === 'value') {
-                const currentKey = Object.keys(oldObj)[0];
-                newObj[currentKey] = newValue;
+                if (oldObj[oldKey] === newVal) return prevDataReq;
+                oldObj[oldKey] = newVal;
             }
-
-            newArray[id] = newObj;
+            newArray[id] = oldObj;
             return { ...prevDataReq, [key]: newArray };
         });
     };
@@ -96,37 +237,38 @@ function ControlBox (props) {
         const key = isOptions ? 'headers' : 'query';
         console.log(`Удалён элемент из ${key} с id: ${id + 1}`);
 
-        setDataReq(prevDataReq => ({
-            ...prevDataReq,
-            [key]: prevDataReq[key].filter((_, index) => index !== id)
-        }));
+        setDataReq(prevDataReq => {
+            const deepCopy = JSON.parse(JSON.stringify(prevDataReq));
+            deepCopy[key] = deepCopy[key].filter((_, index) => index !== id);
+            return deepCopy;
+        });
     };
 
     const handleAddUniversal = (eo, isOptions) => {
         eo.preventDefault();
         const key = isOptions ? 'headers' : 'query';
-        console.log(`Добавлен новый элемент в ${key}`);
 
-        setDataReq(prevDataReq => {
-            const prevArray = Array.isArray(prevDataReq[key]) ? prevDataReq[key] : [];
-            return {
-                ...prevDataReq,
-                [key]: [...prevArray, { '': '' }]
-            };
-        });
+        setDataReq(prevDataReq => ({
+            ...prevDataReq,
+            [key]: [
+                ...(Array.isArray(prevDataReq[key]) ? prevDataReq[key] : []),
+                { '': '' }
+            ]
+        }));
     };
     // ----- FUNC BODY -----
     const handleChangeBody = (newValue) => {
-        setDataReq(prevDataReq => (
-            {...prevDataReq, body: newValue}
-        ));
+        const newVal = (typeof newValue === 'string') ? newValue.trim() : '';
+        setDataReq((prevDataReq) => {
+            if (prevDataReq.body === newVal) return prevDataReq
+            else return {...prevDataReq, body: newVal}
+        });
     };
     // ----- FUNC OTHER -----
     const optionList = METHOD_LIST.map((pos, index) => {
         return <option key={index} value={pos}>{pos}</option>
     });
-
-    console.log(dataReq);
+    console.log(JSON.stringify(errsDaraReq));
     return (
         <form id={'formReq'} onSubmit={submitForm} onReset={resetForm} className={'control-box__form'}>
             <table className={'control-box__table'}>
@@ -140,6 +282,7 @@ function ControlBox (props) {
                     <tr>
                         <td>
                             <select id={'method'} className={'table-method__input'} value={METHOD_NAME} onChange={updateMethod}>
+                                <option key={'100'} value={''} disabled={true}>Выберите метод:</option>
                                 {optionList}
                             </select>
                         </td>
@@ -149,10 +292,32 @@ function ControlBox (props) {
                     </tr>
                 </tbody>
             </table>
+            <div className={'control-box_text-err'}>{errsDaraReq?.method}</div>
+            <div className={'control-box_text-err'}>{errsDaraReq?.url}</div>
             <hr/>
-            {(METHOD_NAME === 'GET') && (<GetBody data={dataReq?.query} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>)}
-            {(METHOD_NAME === 'POST') && (<PostBody body={dataReq?.body} onChange={handleChangeBody}/>)}
-            {(METHOD_NAME) && (<HeadersBody data={dataReq?.headers} headers={HEADERS_LIST} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>)}
+
+            {(METHOD_NAME === 'GET') && (
+                <Fragment>
+                    <GetBody data={dataReq?.query} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>
+                    <div className={'control-box_text-err'}>{errsDaraReq?.query}</div>
+                </Fragment>
+            )}
+            {(METHOD_NAME === 'POST') && (
+                <Fragment>
+                    <PostBody body={dataReq?.body} onChange={handleChangeBody}/>
+                    <div className={'control-box_text-err'}>{errsDaraReq?.body}</div>
+                </Fragment>
+            )}
+            {(METHOD_NAME) && (<hr/>)}
+
+            {(METHOD_NAME) && (
+                <Fragment>
+                    <HeadersBody data={dataReq?.headers} headers={HEADERS_LIST} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>
+                    <div className={'control-box_text-err'}>{errsDaraReq?.headers}</div>
+                </Fragment>
+            )}
+            {(METHOD_NAME) && (<hr/>)}
+
             <div className={'control-box__btn'}>
                 <button type={'button'} onClick={saveForm}>Сохранить запрос</button>
                 <button type={'submit'}>Отправить запрос</button>

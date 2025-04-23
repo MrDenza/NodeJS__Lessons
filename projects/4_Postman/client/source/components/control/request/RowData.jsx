@@ -2,15 +2,17 @@ import React, { memo } from "react";
 import './RowData.css';
 
 function RowData(props) {
+
     return (
         <tr className={'row-data__box'}>
             <td>
                 <label>
                     {props.isOptions ? (
                         <select
-                            value={props.name}
+                            value={props.options?.includes(props.name) ? props.name : ''}
                             onChange={e => props.onChange(props.id, 'name', e.target.value, props.isOptions)}
                         >
+                            <option key={'200'} value={''} disabled={true}>Выберите заголовок:</option>
                             {props.options?.map(opt => (
                                 <option
                                     key={opt}
@@ -24,7 +26,7 @@ function RowData(props) {
                     ) : (
                         <input
                             type="text"
-                            value={props.name}
+                            value={props.name || ''}
                             onChange={e => props.onChange(props.id, 'name', e.target.value)}
                         />
                     )}
@@ -34,7 +36,8 @@ function RowData(props) {
                 <label>
                     <input
                         type="text"
-                        value={props.value}
+                        value={props.value || ''}
+                        //disabled={!props.name && true}
                         onChange={e => props.onChange(props.id, 'value', e.target.value, props.isOptions)}
                     />
                 </label>

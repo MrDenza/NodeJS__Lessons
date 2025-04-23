@@ -2,17 +2,14 @@ import React from "react";
 import RowData from "./RowData";
 import './HeadersBody.css';
 
-
-
 const VARIANT = true;
 
 function HeadersBody(props) {
 
-    const allRowData = props.data?.map((pos, index) => {
-        let keyName = Object.keys(pos)[0];
-
+    const allRowData = (props.data || []).map((pos, index) => {
+        const keys = Object.keys(pos);
+        const keyName = keys.length > 0 ? keys[0] : '';
         const usedOptions = props.data.map(p => Object.keys(p)[0]).filter(name => name !== keyName);
-
         return (
             <RowData
                 key={index}
@@ -44,7 +41,6 @@ function HeadersBody(props) {
                 <tbody>{allRowData}</tbody>
             </table>
             <button onClick={eo => props.onAdd(eo, VARIANT)}>Добавить заголовок</button>
-            <hr />
         </div>
     );
 }

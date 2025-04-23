@@ -1,16 +1,17 @@
-import React, { memo, useState } from "react";
+import React, { memo } from "react";
 import RowData from "./RowData";
 import './GetBody.css';
 
 function GetBody (props) {
 
-    const allGetPos = props.data?.map((pos, index) => {
-        let keyName = Object.keys(pos)[0];
+    const allGetPos = (props.data || []).map((pos, index) => {
+        const keys = Object.keys(pos);
+        const keyName = keys.length > 0 ? keys[0] : '';
         return (
             <RowData
                 key={index}
                 id={index}
-                name={keyName}
+                name={keyName || ''}
                 value={pos[keyName]}
                 onChange={props.onChange}
                 onDelete={props.onDelete}
@@ -36,7 +37,6 @@ function GetBody (props) {
                 </tbody>
             </table>
             <button onClick={(eo) => {props.onAdd(eo)}}>Добавить параметр</button>
-            <hr/>
         </div>
     );
 }
