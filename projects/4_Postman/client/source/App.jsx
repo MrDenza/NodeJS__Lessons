@@ -16,10 +16,10 @@ import ControlBody from "./components/control/ControlBody";
 let DATA_LIST = [
 	{
 		method: "post",
-		url: "http:/",
+		url: "http://tyt",
 		query: [
 		],
-		body: '"{"test1": "123", "test2": ["boy","girl"]}"',
+		body: '{"test1": "123", "test2": ["boy","girl"]}',
 		headers: [
 			{"Content-Type": "application/json"},
 			{'Accept': 'true'},
@@ -48,36 +48,61 @@ let DATA_LIST = [
 		]
 	},
 ]
-// let DATA_REQ = {
-// 	method: "post",
-// 	url: "http:/",
-// 	query: [
-// 		{key: 1},
-// 		{aga: 2},
-// 		{privet: "test"},
-// 	],
-// 	body: '"{"test1": "123", "test2": ["boy","girl"]}"',
-// 	headers: [
-// 		{"Content-Type": "application/json"},
-// 		{'Accept': 'true'},
-// 	]
-// };
-let DATA_RES = {};
+
+function normalizeRequest (req) {
+	const sortEntries = arr => arr
+	?.map(item => {
+		const entries = Object.entries(item);
+		entries.sort(([a], [b]) => a.localeCompare(b));
+		return JSON.stringify(entries);
+	})
+	.sort()
+	.join('|') || '';
+
+	return {
+		method: req.method.toLowerCase(),
+		url: req.url.toLowerCase().trim(),
+		body: req.body?.trim() || '',
+		query: sortEntries(req.query),
+		headers: sortEntries(req.headers)
+	};
+}
+
+function isRequestExists (newItem, arrList) {
+	const normalizedNew = normalizeRequest(newItem);
+
+	return arrList.some(item => {
+		const normalizedItem = normalizeRequest(item);
+		return (
+			normalizedItem.method === normalizedNew.method &&
+			normalizedItem.url === normalizedNew.url &&
+			normalizedItem.body === normalizedNew.body &&
+			normalizedItem.query === normalizedNew.query &&
+			normalizedItem.headers === normalizedNew.headers
+		);
+	});
+}
 
 function App() {
 
 	const [dataList, setDataList] = useState(DATA_LIST); // []
-    const [dataReq, setDataReq] = useState({});
-	const [dataRes, setDataRes] = useState(DATA_RES);
+    const [dataReq, setDataReq] = useState({}); // {}
+	const [dataRes, setDataRes] = useState({}); // {}
 
-	const updateDataReq = (newData) => {
+	const sendDataReq = (newData) => {
 		console.log('submit');
 		setDataReq({...newData});
 	};
 
 	const saveDataReq = (data) => {
-		console.log('save');
-		setDataList(prevDataList => [...prevDataList, data]);
+		setDataList(prevDataList => {
+			if (isRequestExists(data, prevDataList)) {
+				alert('Такой запрос уже есть в избранном!');
+				return prevDataList;
+			} else {
+				return [...prevDataList, data];
+			}
+		});
 	};
 
 	const openFavoriteReq = (id) => {
@@ -87,7 +112,7 @@ function App() {
 	return (
 		<div className="container">
 			<FavoritesList dataList={dataList} openPosition={openFavoriteReq}/>
-			<ControlBody dataReq={dataReq} dataRes={dataRes} updateDataReq={updateDataReq} saveDataReq={saveDataReq}/>
+			<ControlBody dataReq={dataReq} dataRes={dataRes} sendDataReq={sendDataReq} saveDataReq={saveDataReq}/>
 		</div>
 	);
 }

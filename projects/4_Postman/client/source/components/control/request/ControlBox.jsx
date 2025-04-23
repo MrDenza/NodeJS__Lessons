@@ -151,42 +151,37 @@ function ControlBox (props) {
     }, [props.dataReq]);
     // ----- FUNC VALIDATE -----
     const validate = (dataObj) => {
-
         let objErrors = {};
-
         for (let key in dataObj) {
             let errorsElem = validators[key](dataObj[key]);
             if (errorsElem) objErrors[key] = errorsElem;
         }
-
-        return objErrors;
+        setErrsDaraReq(objErrors);
+        return !Object.keys(objErrors).length;
     };
     // ----- FUNC FORM -----
     const submitForm = (eo) => {
         eo.preventDefault();
-        let errors = validate(dataReq);
-        if (Object.keys(errors).length) {
-            console.log('ошибки:  ' + JSON.stringify(errors));
-        } else {
-            console.log('ошибок нет');
-        }
-        return setErrsDaraReq(errors);
-        //props.updateDataReq(dataReq);
+        let isValid = validate(dataReq);
+        if (isValid) return props.sendDataReq(dataReq);
     };
 
     const resetForm = (eo) => {
         eo.preventDefault();
         setDataReq(BLANK_DATA_REQ);
+        setErrsDaraReq({});
     };
 
     const saveForm = () => {
-        props.saveDataReq(dataReq);
+        let isValid = validate(dataReq);
+        if (isValid) return props.saveDataReq(dataReq);
     };
     // ----- FUNC METHOD -----
     const updateMethod = (eo) => {
-        const newMethod = eo.target.value.toLowerCase();
+        const newMethod = (typeof eo.target.value === 'string') ? eo.target.value.toLowerCase() : '';
         setDataReq(prevDataReq => {
-            const newDataReq = { ...prevDataReq, method: newMethod };
+            let newDataReq = { ...prevDataReq};
+            newDataReq.method = newMethod;
             if (newMethod === 'get') {
                 if ('body' in newDataReq) {
                     newDataReq.body = '';
@@ -268,7 +263,7 @@ function ControlBox (props) {
     const optionList = METHOD_LIST.map((pos, index) => {
         return <option key={index} value={pos}>{pos}</option>
     });
-    console.log(JSON.stringify(errsDaraReq));
+
     return (
         <form id={'formReq'} onSubmit={submitForm} onReset={resetForm} className={'control-box__form'}>
             <table className={'control-box__table'}>

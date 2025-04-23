@@ -8,7 +8,7 @@ import ViewBox from "./response/ViewBox";
 function ControlBody (props) {
     return (
         <div className='control-box'>
-            <ControlBox dataReq={props.dataReq} updateDataReq={props.updateDataReq} resetDataReq={props.resetDataReq} saveDataReq={props.saveDataReq}/>
+            <ControlBox dataReq={props.dataReq} sendDataReq={props.sendDataReq} saveDataReq={props.saveDataReq}/>
             <ViewBox dataRes={props.dataRes}/>
         </div>
     );
