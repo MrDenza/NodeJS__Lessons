@@ -4,7 +4,8 @@ import "./FavoritesBody.css";
 
 function FavoritesBody (props) {
 
-    const favoritesPos = props.dataList.map((pos, index) => {
+    const dataList = (Array.isArray(props.dataList)) ? props.dataList : [];
+    const favoritesPos = dataList.map((pos, index) => {
         return <FavoritePos key={index} idPos={index} method={pos.method} url={pos.url} openPosition={props.openPosition}/>;
     });
 

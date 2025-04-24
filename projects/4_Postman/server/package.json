@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --ignore db_votes.json index.js"
+    "dev": "nodemon --ignore db_users-list.json index.js"
   },
   "keywords": [],
   "author": "",
