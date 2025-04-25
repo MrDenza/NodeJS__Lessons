@@ -37,8 +37,10 @@ const ERRORS_MSG_LIST = {
         duplicateKey: 'Нельзя использовать несколько пар \"ключ-значение\" с одинаковыми ключами!'
     },
     body: {
-        noValidBody: 'Некорректный формат JSON!',
-        noCorrectBody: 'Некорректный формат JSON! JSON должен быть объектом/массивом.'
+        noContentType: "Content-Type не указан в заголовках!",
+        invalidType: "Неподдерживаемый Content-Type!",
+        noValidBody: "Тело запроса не соответствует Content-Type!",
+        noCorrectBody: "Некорректный формат тела!"
     },
     headers: {
         errTypeValue: 'Ошибка значений заголовков! Удалите все пары \"заголовок-значение\" и пересоздайте снова.',
@@ -92,14 +94,36 @@ const validators = {
 
         return false;
     },
-    body: (value) => {
-        if (!value.length) return false;
+    body: (value, contentType) => {
+        if (!contentType) return ERRORS_MSG_LIST.body.noContentType;
+
+        if (value === undefined || value === null) {
+            return ERRORS_MSG_LIST.body.noValidBody;
+        }
 
         try {
-            const parsed = JSON.parse(value);
-            const isValid = typeof parsed === 'object' && parsed !== null;
-            return isValid ? false : ERRORS_MSG_LIST.body.noCorrectBody;
-        } catch {
+            if (contentType.includes('application/json')) {
+                const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+                if (typeof parsed !== 'object' || parsed === null) {
+                    return ERRORS_MSG_LIST.body.noCorrectBody;
+                }
+            }
+            else if (contentType.includes('application/x-www-form-urlencoded')) {
+                const params = new URLSearchParams(value);
+                if (Array.from(params.entries()).length === 0 && value.trim() !== '') {
+                    return ERRORS_MSG_LIST.body.noValidBody;
+                }
+            }
+            else if (contentType.includes('text/plain')) {
+                if (typeof value !== 'string') {
+                    return ERRORS_MSG_LIST.body.noValidBody;
+                }
+            }
+            else {
+                return ERRORS_MSG_LIST.body.invalidType;
+            }
+            return false;
+        } catch (error) {
             return ERRORS_MSG_LIST.body.noValidBody;
         }
     },
@@ -152,10 +176,28 @@ function ControlBox (props) {
     // ----- FUNC VALIDATE -----
     const validate = (dataObj) => {
         let objErrors = {};
-        for (let key in dataObj) {
-            let errorsElem = validators[key](dataObj[key]);
-            if (errorsElem) objErrors[key] = errorsElem;
+
+        let contentType = null;
+        if (Array.isArray(dataObj.headers)) {
+            const contentTypeHeader = dataObj.headers.find(
+                h => Object.keys(h).some(k => k.toLowerCase() === 'content-type')
+            );
+            if (contentTypeHeader) {
+                const key = Object.keys(contentTypeHeader).find(k => k.toLowerCase() === 'content-type');
+                contentType = contentTypeHeader[key];
+            }
         }
+
+        for (let key in dataObj) {
+            if (key === 'body') {
+                let errorsElem = validators.body(dataObj[key], contentType);
+                if (errorsElem) objErrors[key] = errorsElem;
+            } else {
+                let errorsElem = validators[key](dataObj[key]);
+                if (errorsElem) objErrors[key] = errorsElem;
+            }
+        }
+
         setErrsDaraReq(objErrors);
         return !Object.keys(objErrors).length;
     };

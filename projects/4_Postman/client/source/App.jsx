@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import FavoritesBody from "./components/favorites/FavoritesBody";
 import ControlBody from "./components/control/ControlBody";
-
-import { getApi } from "./api/getApi";
 import { postApi } from "./api/postApi";
 
 const URI_LINK = {
@@ -111,17 +109,8 @@ function App() {
         if (isRequestExists(data, dataList)) {
             return alert("Такой запрос уже есть в избранном!");
         } else {
-            updateDataList(URI_LINK.getDataList, data)
+            updateDataList(URI_LINK.getDataList, data);
         }
-
-        // setDataList((prevDataList) => {
-        //     if (isRequestExists(data, prevDataList)) {
-        //         alert("Такой запрос уже есть в избранном!");
-        //         return prevDataList;
-        //     } else {
-        //         return [...prevDataList, data];
-        //     }
-        // });
     };
 
     const openFavoriteReq = (id) => {

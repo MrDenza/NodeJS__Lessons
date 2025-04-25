@@ -7,11 +7,22 @@ const fs = require("fs");
 const os = require("os");
 const DB_USERS_LIST_PATH = path.join(__dirname, 'db_users-list.json');
 const LOG_FILE_PATH = path.join(__dirname, '_server.log');
+//const validateAddMiddleware = require('./validateAddMiddleware'); //отключена и оставлена простая проверка req.body.add
 
 WEBSERVER.use(express.static(path.join(__dirname, '../client/public/')));
 WEBSERVER.use(express.json());
 
-WEBSERVER.post('/datalist', (req, res) => {
+function validateAddMiddleware(req, res, next) {
+	const data = req.body.add;
+	if (data) {
+		if (typeof data !== 'object' || typeof data.method !== 'string' || typeof data.url !== 'string' || typeof data.url !== 'string' || !Array.isArray(data.query) || typeof data.body !== 'string' || !Array.isArray(data.headers)) {
+			return res.status(400).send();
+		}
+	}
+	next();
+}
+
+WEBSERVER.post('/datalist', validateAddMiddleware, (req, res) => {
 	readJsonFileAsync(DB_USERS_LIST_PATH, (error, data) => {
 		if (error) {
 			return res.status(404).send(error);
@@ -35,10 +46,10 @@ WEBSERVER.post('/datalist', (req, res) => {
 						logLineSync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при записи данных: ${writeErr}`);
 						return res.status(500).send({ error: 'Ошибка записи данных' });
 					}
-					res.send(JSON.stringify({ list: data[ID_USER] }));
+					res.json({ list: data[ID_USER] });
 				});
 			} else {
-				res.send(JSON.stringify({ list: data[ID_USER] }));
+				res.json({ list: data[ID_USER] });
 			}
 		} else {
 			const newId = generateUserId();
@@ -51,7 +62,7 @@ WEBSERVER.post('/datalist', (req, res) => {
 				if (writeErr) {
 					return res.status(403).send(writeErr);
 				}
-				res.send(JSON.stringify({ id: newId, list: newList }));
+				res.json({ id: newId, list: newList });
 			});
 		}
 	});
@@ -116,6 +127,11 @@ function logLineSync(logFilePath, logLine) {
 	fs.writeSync(logFd, fullLogLine + os.EOL);
 	fs.closeSync(logFd);
 }
+
+
+
+
+
 
 
 
