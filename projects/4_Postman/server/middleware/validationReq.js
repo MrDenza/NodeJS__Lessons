@@ -6,7 +6,6 @@ const HEADERS_LIST = [
     'accept',
     'user-agent',
     'cache-control',
-
 ];
 
 const ERRORS_MSG_LIST = {
@@ -17,6 +16,7 @@ const ERRORS_MSG_LIST = {
     url: {
         nullField: 'Поле url обязательно',
         noValidUrl: 'Некорректный URL',
+        noParamsAllowed: 'URL не должен содержать параметры запроса',
     },
     query: {
         errTypeValue: 'Поле query должно быть массивом объектов с одним ключом',
@@ -55,10 +55,14 @@ function validateAddMiddleware(req, res, next) {
     if (typeof url !== 'string' || url.trim() === '') {
         return res.status(400).json({ error: ERRORS_MSG_LIST.url.nullField });
     }
+    let urlObj;
     try {
-        new URL(url);
+        urlObj = new URL(url);
     } catch {
         return res.status(400).json({ error: ERRORS_MSG_LIST.url.noValidUrl });
+    }
+    if (urlObj.search && urlObj.search !== '') {
+        return res.status(400).json({ error: ERRORS_MSG_LIST.url.noParamsAllowed });
     }
 
     // Проверка query

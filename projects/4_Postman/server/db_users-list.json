@@ -2,113 +2,57 @@
   "user_m9v9rjv4": [],
   "user_m9v81p3e": [
     {
-      "method": "post",
-      "url": "http://tyt",
-      "query": [],
-      "body": "{\"test1\": \"123\", \"test2\": [\"boy\",\"girl\"]}",
-      "headers": [
-        {
-          "Content-Type": "application/json"
-        },
-        {
-          "Accept": "true"
-        }
-      ]
-    },
-    {
       "method": "get",
-      "url": "http:/",
-      "query": [
-        {
-          "key": 1
-        },
-        {
-          "aga": 5
-        },
-        {
-          "privet": "test"
-        }
-      ],
-      "headers": [
-        {
-          "Content-Type": "application/json"
-        }
-      ]
-    },
-    {
-      "method": "get",
-      "url": "http:/",
-      "query": [
-        {
-          "key": 1
-        }
-      ],
-      "headers": [
-        {
-          "Accept": "true"
-        }
-      ]
-    },
-    {
-      "method": "get",
-      "url": "http://fefe",
-      "query": [
-        {
-          "privet": "test"
-        }
-      ],
-      "headers": [
-        {
-          "Content-Type": "application/json"
-        }
-      ]
-    },
-    {
-      "method": "get",
-      "url": "http://123",
-      "query": [
-        {
-          "123": "555"
-        }
-      ],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "post",
-      "url": "http://tytui",
-      "query": [],
-      "body": "",
-      "headers": [
-        {
-          "Accept": "123"
-        }
-      ]
-    },
-    {
-      "method": "",
-      "url": "",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "",
-      "url": "",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "",
-      "url": "",
+      "url": "https://petstore.swagger.io/#/store/inventory",
       "query": [],
       "body": "",
       "headers": []
     },
     {
       "method": "get",
-      "url": "http://tyt",
+      "url": "https://jsonplaceholder.typicode.com/todos/1",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "get",
+      "url": "https://petstore.swagger.io/#/store/inventory1223131",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "get",
+      "url": "http://nodearch.e-learning.by:3050/service2?par1=555&par2=777",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "get",
+      "url": "https://fe.it-academy.by/images/logo3.png",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "get",
+      "url": "https://www.ibm.com/products/api-connect?lnk=flatitem&test=1234",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "get",
+      "url": "http://fe.it-academy.by/aaa.gif",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "get",
+      "url": "http://nodearch.e-learning.by:4052/main1.html",
       "query": [],
       "body": "",
       "headers": []

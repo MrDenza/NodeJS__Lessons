@@ -7,6 +7,22 @@ import HeadersBody from "./HeadersBody";
 const METHOD_LIST = [
     'GET',
     'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'HEAD',
+    'OPTIONS',
+];
+const METHOD_FOR_QEURY = [
+    'GET',
+    'DELETE',
+    'HEAD',
+    'OPTIONS',
+];
+const METHOD_FOR_BODY = [
+    'POST',
+    'PUT',
+    'PATCH',
 ];
 const HEADERS_LIST = [
     'Accept',
@@ -29,7 +45,8 @@ const ERRORS_MSG_LIST = {
     },
     url: {
         nullField: 'Введите URL запроса!',
-        noValidUrl: 'Некорректный формат URL!'
+        noValidUrl: 'Некорректный формат URL!',
+        noParamsAllowed: 'URL не должен содержать параметры запроса',
     },
     query: {
         errTypeValue: 'Ошибка значений параметров! Удалите все пары \"ключ-значение\" и пересоздайте снова.',
@@ -65,13 +82,18 @@ const validators = {
         if (URL.canParse) { // для современных браузеров
             return URL.canParse(value) ? false : ERRORS_MSG_LIST.url.noValidUrl;
         }
-
+        let urlObj;
         try {
-            new URL(value);
-            return false;
+            urlObj = new URL(value);
         } catch {
             return ERRORS_MSG_LIST.url.noValidUrl;
         }
+        // проверка на отсутствие параметров в url
+        // if (urlObj.search && urlObj.search !== '') {
+        //     return ERRORS_MSG_LIST.url.noParamsAllowed;
+        // }
+
+        return false;
     },
     query: (value) => {
         const isValidStructure = Array.isArray(value) &&
@@ -188,10 +210,14 @@ function ControlBox (props) {
             }
         }
 
+        const method = typeof dataObj.method === 'string' ? dataObj.method.toUpperCase() : '';
+
         for (let key in dataObj) {
             if (key === 'body') {
-                let errorsElem = validators.body(dataObj[key], contentType);
-                if (errorsElem) objErrors[key] = errorsElem;
+                if (METHOD_FOR_BODY.includes(method)) {
+                    let errorsElem = validators.body(dataObj[key], contentType);
+                    if (errorsElem) objErrors[key] = errorsElem;
+                }
             } else {
                 let errorsElem = validators[key](dataObj[key]);
                 if (errorsElem) objErrors[key] = errorsElem;
@@ -220,11 +246,11 @@ function ControlBox (props) {
     };
     // ----- FUNC METHOD -----
     const updateMethod = (eo) => {
-        const newMethod = (typeof eo.target.value === 'string') ? eo.target.value.toLowerCase() : '';
+        const newMethod = (typeof eo.target.value === 'string') ? eo.target.value.toUpperCase() : '';
         setDataReq(prevDataReq => {
             let newDataReq = { ...prevDataReq};
             newDataReq.method = newMethod;
-            if (newMethod === 'get') {
+            if (METHOD_FOR_QEURY.includes(newMethod)) {
                 if ('body' in newDataReq) {
                     newDataReq.body = '';
                 }
@@ -333,13 +359,13 @@ function ControlBox (props) {
             <div className={'control-box_text-err'}>{errsDaraReq?.url}</div>
             <hr/>
 
-            {(METHOD_NAME === 'GET') && (
+            {(METHOD_FOR_QEURY.includes(METHOD_NAME)) && (
                 <Fragment>
                     <GetBody data={dataReq?.query} onChange={handleChangeUniversal} onDelete={handleDeleteUniversal} onAdd={handleAddUniversal}/>
                     <div className={'control-box_text-err'}>{errsDaraReq?.query}</div>
                 </Fragment>
             )}
-            {(METHOD_NAME === 'POST') && (
+            {(METHOD_FOR_BODY.includes(METHOD_NAME)) && (
                 <Fragment>
                     <PostBody body={dataReq?.body} onChange={handleChangeBody}/>
                     <div className={'control-box_text-err'}>{errsDaraReq?.body}</div>

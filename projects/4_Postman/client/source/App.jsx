@@ -6,7 +6,6 @@ import { postApi } from "./api/postApi";
 
 const URI_LINK = {
     getDataList: "/datalist",
-    saveDataElem: "/save",
     sendDataReq: "/send",
 };
 
@@ -50,27 +49,14 @@ function App() {
     const [dataReq, setDataReq] = useState({}); // {}
     const [dataRes, setDataRes] = useState({}); // {}
 
-    const sendPostRequest = (url, callback, newData) => {
-        const idUser = window.localStorage.getItem('id');
-        const objInfo = idUser ? { id: idUser } : undefined;
-        const bodyReq = newData ? {...objInfo, add: newData}: objInfo;
-
-        postApi(url, bodyReq).then(r => {
-            const data = JSON.parse(r);
-            if (data.id) window.localStorage.setItem('id', String(data.id));
-            if (data.list.length) {
-                callback(data.list);
-            }
-        });
-    };
     const postData = (url, callback, newData) => {
         const idUser = window.localStorage.getItem('id');
         const objInfo = idUser ? { id: idUser } : {};
         const bodyReq = newData ? { ...objInfo, add: newData } : objInfo;
 
-        postApi(url, bodyReq).then(r => {
+        postApi(url, bodyReq).then(data => {
             try {
-                const data = JSON.parse(r);
+                //const data = JSON.parse(r);
                 if (data.id) {
                     window.localStorage.setItem('id', String(data.id));
                 }
@@ -92,6 +78,25 @@ function App() {
         postData(url, callbackFn, addData);
     };
 
+    const postSendData = (url, callback, newData) => {
+        const idUser = window.localStorage.getItem('id');
+        const objInfo = idUser ? { id: idUser } : {};
+        const bodyReq = newData ? { ...objInfo, send: newData } : objInfo;
+
+        postApi(url, bodyReq).then(r => {
+            try {
+                //const data = JSON.parse(r);
+                // if (Array.isArray(data.list) && data.list.length > 0) {
+                callback(r);
+                // }
+            } catch (e) {
+                console.error('Ошибка парсинга ответа:', e);
+            }
+        }).catch(err => {
+            console.error('Ошибка запроса:', err);
+        });
+    };
+
     useEffect( () => {
         // componentDidMount
         updateDataList(URI_LINK.getDataList);
@@ -100,9 +105,13 @@ function App() {
         }
     }, []);
 
-    const sendDataReq = (newData) => {
-        console.log("submit");
-        setDataReq({ ...newData });
+    const sendDataReq = (sendData) => {
+        let callbackFn = (data) => {
+            setDataRes(data);
+        }
+        postSendData(URI_LINK.sendDataReq, callbackFn, sendData);
+
+        setDataReq({ ...sendData });
     };
 
     const saveDataReq = (data) => {
@@ -116,6 +125,8 @@ function App() {
     const openFavoriteReq = (id) => {
         setDataReq(dataList[id]);
     };
+
+    //console.log(dataRes);
 
     return (
         <div className="container">

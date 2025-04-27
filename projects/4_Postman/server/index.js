@@ -2,6 +2,7 @@
 const express = require('express');
 const WEBSERVER = express();
 const PORT = 3054;
+//const cookieParser = require('cookie-parser');
 const path = require('path')
 const fs = require("fs");
 const os = require("os");
@@ -11,12 +12,13 @@ const LOG_FILE_PATH = path.join(__dirname, '_server.log');
 
 WEBSERVER.use(express.static(path.join(__dirname, '../client/public/')));
 WEBSERVER.use(express.json());
+//WEBSERVER.use(cookieParser());
 
 function validateAddMiddleware(req, res, next) {
-	const data = req.body.add;
+	const data = req.body.add || req.body.send;
 	if (data) {
 		if (typeof data !== 'object' || typeof data.method !== 'string' || typeof data.url !== 'string' || typeof data.url !== 'string' || !Array.isArray(data.query) || typeof data.body !== 'string' || !Array.isArray(data.headers)) {
-			return res.status(400).send();
+			return res.status(400).json({ error: 'Не валидный запрос!' });
 		}
 	}
 	next();
@@ -33,7 +35,7 @@ WEBSERVER.post('/datalist', validateAddMiddleware, (req, res) => {
 		const newItem = req.body.add;
 
 		if (ID_USER && (ID_USER in data)) {
-			logLineSync(LOG_FILE_PATH,
+			logLineAsync(LOG_FILE_PATH,
 				`[${req.ip}] [POST][/datalist] - Авторизация пользователя: ${ID_USER} ${newItem ? `+ добавление данных: ${JSON.stringify(newItem)}` : ''}`);
 			if (newItem) {
 				if (!Array.isArray(data[ID_USER])) {
@@ -43,7 +45,7 @@ WEBSERVER.post('/datalist', validateAddMiddleware, (req, res) => {
 
 				writeJsonFileAsync(DB_USERS_LIST_PATH, data, (writeErr) => {
 					if (writeErr) {
-						logLineSync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при записи данных: ${writeErr}`);
+						logLineAsync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при записи данных: ${writeErr}`);
 						return res.status(500).send({ error: 'Ошибка записи данных' });
 					}
 					res.json({ list: data[ID_USER] });
@@ -53,7 +55,7 @@ WEBSERVER.post('/datalist', validateAddMiddleware, (req, res) => {
 			}
 		} else {
 			const newId = generateUserId();
-			logLineSync(LOG_FILE_PATH,
+			logLineAsync(LOG_FILE_PATH,
 				`[${req.ip}] [POST][/datalist] - Регистрация нового пользователя: ${newId} ${newItem ? `+ добавление данных: ${JSON.stringify(newItem)}` : ''}`);
 			const newList = newItem ? [newItem] : [];
 			const newData = { ...data, [newId]: newList };
@@ -68,31 +70,91 @@ WEBSERVER.post('/datalist', validateAddMiddleware, (req, res) => {
 	});
 });
 
-WEBSERVER.post('/send', (req, res) => {
-	console.log('[POST] Запроc /send');
-	res.send('send');
+WEBSERVER.post("/send", validateAddMiddleware, async (req, res) => {
+    try {
+        const { method, url, query, body, headers } = req.body.send;
+		await logLineAsync(LOG_FILE_PATH, `[${req.ip}] [POST][/send] - Запрос: ${JSON.stringify(req.body.send)}`);
+		if (!url) return res.status(400).json({ error: 'Не валидный запрос!' });
+
+        // Формируем URL с query-параметрами
+		let fullUrl = '';
+		try {
+			const urlObj = new URL(url);
+			if (Array.isArray(query) && query.length > 0) {
+				query.forEach((obj) => {
+					const [key, value] = Object.entries(obj)[0];
+					urlObj.searchParams.append(key, value);
+				});
+			}
+			fullUrl = urlObj.toString();
+		} catch (e) {
+			return res.status(400).json({ error: 'Не валидный запрос!' });
+		}
+
+        // Формируем объект заголовков
+        const fetchHeaders = {};
+        if (Array.isArray(headers)) {
+            headers.forEach((obj) => {
+                const [key, value] = Object.entries(obj)[0];
+                fetchHeaders[key] = value;
+            });
+        }
+
+        // Определяем тело запроса
+        let fetchBody = body;
+        if (fetchHeaders["Content-Type"] && fetchHeaders["Content-Type"].includes("application/json")) {
+            try {
+                fetchBody = JSON.stringify(JSON.parse(body)); // Проверка и сериализация JSON
+            } catch {
+                return res.status(400).json({ error: 'Не валидный запрос!' });
+            }
+        }
+        if (["GET"].includes(method.toUpperCase())) {
+            fetchBody = undefined;
+        }
+
+		// Fetch запрос
+		const result = await fetchWithRedirects(fullUrl, {
+			method,
+			headers,
+			body: fetchBody,
+		});
+
+		await logLineAsync(LOG_FILE_PATH, `[${req.ip}] [POST][/send] - Запрос успешно выполнен по url: ${String(url)}`);
+		res.status(200).json(result);
+		// res.redirect(result.status, result.finalUrl); // реальный редирект клиенту
+
+	} catch (error) {
+		await logLineAsync(LOG_FILE_PATH, `[${req.ip}]-[ERROR] - Ошибка при проксировании запроса: ${error}`);
+        if (!res.headersSent) {
+			await logLineAsync(LOG_FILE_PATH, `[${req.ip}]-[ERROR] - Ошибка сервера при отправке запроса.`);
+            res.status(500).json({ error: "Ошибка сервера при отправке запроса!" });
+        } else {
+            res.end();
+        }
+    }
 });
 
 WEBSERVER.use((req, res) => {
-	logLineSync(LOG_FILE_PATH, `[${req.ip}]-[ERROR] - Обращение к ${req.originalUrl}`);
+	logLineAsync(LOG_FILE_PATH, `[${req.ip}]-[ERROR] - Обращение к ${req.originalUrl}`);
 	res.status(404).send('Страница не найдена.');
 });
 
 WEBSERVER.listen(PORT, () => {
-	logLineSync(LOG_FILE_PATH, `[SERVER-INFO] - WebServer запущен на порте: ${PORT}`);
+	logLineAsync(LOG_FILE_PATH, `[SERVER-INFO] - WebServer запущен на порте: ${PORT}`);
 });
 
 function readJsonFileAsync(openFilePath, callback) {
 	fs.readFile(openFilePath, 'utf8', (error, data) => {
 		if (error) {
-			logLineSync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при чтении файла: ${error}`);
+			logLineAsync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при чтении файла: ${error}`);
 			callback(error, null);
 		} else {
 			try {
 				const jsonData = JSON.parse(data);
 				callback(null, jsonData);
 			} catch (parseError) {
-				logLineSync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при чтении файла: ${error}`);
+				logLineAsync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при чтении файла: ${error}`);
 				callback(parseError, null);
 			}
 		}
@@ -103,10 +165,10 @@ function writeJsonFileAsync(openFilePath, data, callback) {
 	const jsonData = JSON.stringify(data, null, 2);
 	fs.writeFile(openFilePath, jsonData, 'utf8', (error) => {
 		if (error) {
-			logLineSync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при записи файла: ${error}`);
+			logLineAsync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][ERROR] - Ошибка при записи файла: ${error}`);
 			callback(error);
 		} else {
-			logLineSync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][SUCCESS] - Данные успешно обновлены!`);
+			logLineAsync(LOG_FILE_PATH, `[SERVER-INFO]-[FILE][SUCCESS] - Данные успешно обновлены!`);
 			callback(null);
 		}
 	});
@@ -116,60 +178,169 @@ function generateUserId() {
 	return 'user_' + (Date.now() + Math.floor(Math.random() * 10000)).toString(36);
 }
 
-function logLineSync(logFilePath, logLine) {
-	const logDT = new Date();
-	let time = logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
-	let fullLogLine = time + " " + logLine;
+function logLineAsync(logFilePath,logLine) {
 
-	console.log(fullLogLine);
+	return new Promise( (resolve,reject) => {
+		const logDT=new Date();
+		let time=logDT.toLocaleDateString()+" "+logDT.toLocaleTimeString();
+		let fullLogLine=time+" "+logLine;
+		console.log(fullLogLine);
 
-	const logFd = fs.openSync(logFilePath, "a+");
-	fs.writeSync(logFd, fullLogLine + os.EOL);
-	fs.closeSync(logFd);
+		fs.open(logFilePath, 'a+', (err,logFd) => {
+			if ( err )
+				reject(err);
+			else
+				fs.write(logFd, fullLogLine + os.EOL, (err) => {
+					if ( err ) {
+						reject(err);
+						// ещё хорошо бы закрыть файл logFd!
+					}
+					else
+						fs.close(logFd, (err) =>{
+							if ( err )
+								reject(err);
+							else
+								resolve();
+						});
+				});
+		});
+	});
+}
+
+async function fetchWithRedirects(url, options = {}, maxRedirects = 5) {
+	const redirects = [];
+	let currentUrl = url;
+	let response;
+
+	for (let i = 0; i <= maxRedirects; i++) {
+		response = await fetch(currentUrl, {
+			...options,
+			redirect: 'manual',
+		});
+		if (response.status >= 300 && response.status < 400) {
+			const location = response.headers.get('location');
+			if (!location) break;
+			redirects.push({
+				status: response.status,
+				url: currentUrl,
+				location,
+			});
+			currentUrl = new URL(location, currentUrl).toString();
+		} else {
+			break;
+		}
+	}
+
+	const contentType = response.headers.get('content-type') || '';
+	let bodyContent;
+	if (contentType.includes('application/json')) { // json
+		bodyContent = await response.json();
+	} else if (contentType.startsWith('text/')) { // text/html
+		bodyContent = await response.text();
+	} else { //application/octet-stream, application/pdf, image/, audio/, video/
+		const arrayBuffer = await response.arrayBuffer();
+		bodyContent = Buffer.from(arrayBuffer).toString('base64'); // base64 для бинарных данных
+	}
+
+	return {
+		finalUrl: currentUrl,
+		status: response.status,
+		headers: Object.fromEntries(response.headers.entries()),
+		body: bodyContent,
+		redirects,
+	};
 }
 
 
 
-
-
-
-
-
-
-
-// const express = require('express');
-// const fetch = require('node-fetch');
-// const app = express();
-//
-// app.use(express.json());
-//
-// app.post('/proxy', async (req, res) => {
-// 	try {
-// 		const { url, method, headers, body } = req.body;
-//
-// 		if (!url) return res.status(400).json({ error: 'URL is required' });
-//
-// 		const response = await fetch(url, {
-// 			method: method || 'GET',
-// 			headers,
-// 			body: ['GET', 'HEAD'].includes(method) ? undefined : body,
-// 		});
-//
-// 		const contentType = response.headers.get('content-type') || '';
-//
-// 		const responseBody = contentType.includes('application/json')
-// 			? await response.json()
-// 			: await response.text();
-//
-// 		res.status(response.status).json({
-// 			status: response.status,
-// 			headers: Object.fromEntries(response.headers.entries()),
-// 			body: responseBody,
-// 			contentType,
-// 		});
-// 	} catch (error) {
-// 		res.status(500).json({ error: error.message });
-// 	}
+// Заметки - полезный код:
+// --- Перенаправляем все запросы с сервера клиенту ---
+// const { pipeline } = require('node:stream/promises');
+// const { Readable } = require('stream');
+// Копируем статус
+//res.status(proxy_response.status);
+// Копируем заголовки
+// proxy_response.headers.forEach((value, name) => {
+//     if (["transfer-encoding", "content-length", 'content-encoding'].includes(name.toLowerCase())) return;
+//     res.setHeader(name, value);
+// });
+// Вариант 1 -
+// Конвертация из Web-ReadableStream в Node.js-ReadableStream
+// function webStreamToNodeStream(webStream) {
+//     const reader = webStream.getReader();
+//     return new Readable({
+//         async read() {
+//             const { done, value } = await reader.read();
+//             if (done) {
+//                 this.push(null);
+//             } else {
+//                 this.push(value);
+//             }
+//         },
+//     });
+// }
+// const nodeReadable = webStreamToNodeStream(proxy_response.body);
+// Вариант 2 -
+// Конвертация из Web-ReadableStream в Node.js-ReadableStream
+//const nodeReadable = Readable.fromWeb(proxy_response.body);
+// Слушатели
+// nodeReadable.on("data", (chunk) => {
+// 	console.log('send');
+// });
+// nodeReadable.on("end", () => {
+// 	console.log("Stream ended");
 // });
 //
-// app.listen(3000, () => console.log('Proxy server running on port 3000'));
+// Перенаправляем поток клиенту
+//await pipeline(nodeReadable, res);
+
+// --- Получаем ответ и формируем клиенту JSON ответ ---
+// Отправляем запрос
+// const proxy_response = await fetch(fullUrl, {
+// 	method: method || 'GET',
+// 	headers,
+// 	body: fetchBody,
+// 	redirect: 'manual',
+// });
+// Копируем статус и заголовки для ответа
+// const status = proxy_response.status;
+// const headersObj = {};
+// proxy_response.headers.forEach((value, name) => {
+// 	headersObj[name] = value;
+// });
+// Обрабатываем тело ответа
+// const contentType = proxy_response.headers.get('content-type') || '';
+// let bodyContent;
+// if (contentType.includes('application/json')) {
+// 	bodyContent = await proxy_response.json();
+// } else if (contentType.startsWith('text/')) {
+// 	bodyContent = await proxy_response.text();
+// } else if (
+// 	contentType.includes('application/octet-stream') ||
+// 	contentType.includes('application/pdf') ||
+// 	contentType.includes('image/') ||
+// 	contentType.includes('audio/') ||
+// 	contentType.includes('video/')
+// ) {
+// Для бинарных данных читаем как буфер и конвертируем в base64 для безопасной передачи в JSON
+// 	const arrayBuffer = await proxy_response.arrayBuffer();
+// 	const buffer = Buffer.from(arrayBuffer);
+// 	bodyContent = buffer.toString('base64');
+// } else {
+// 	bodyContent = await proxy_response.text();
+// }
+// Обработка редиректа - если был
+// const redirect = proxy_response.redirected;
+// const urlRedirect = redirect ? proxy_response.url: undefined;
+// Формируем объект для клиента
+// const responseData = {
+// 	status,
+// 	headers: headersObj,
+// 	body: bodyContent,
+// 	redirect: redirect,
+// 	urlRedirect: urlRedirect,
+// };
+// Отправляем JSON клиенту
+// res.status(200);
+// res.setHeader('Content-Type', 'application/json');
+// res.end(JSON.stringify(responseData));
