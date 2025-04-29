@@ -1,13 +1,14 @@
 /* ------------------------- Style -------------------------- */
 html,
-body, #root {
-	width: 100%;
-	height: 100%;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	box-sizing: border-box;
-	position: relative;
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
 }
 /* body { */
 /* 	min-height: 100vh; */

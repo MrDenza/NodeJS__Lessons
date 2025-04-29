@@ -1,13 +1,17 @@
 .control-box {
-	width: 60%;
-	margin: 5px;
-	padding: 10px;
-	border: 1px green solid;
-	border-radius: 10px;
-	box-sizing: border-box;
+    width: 70%;
+    margin: 5px;
+    padding: 10px;
+    border: 1px gray solid;
+    border-radius: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    align-items: stretch;
 }
 .control-box__title {
-	display: block;
-	text-align: center;
-	font-weight: bold;
+    display: block;
+    text-align: center;
+    font-weight: bold;
 }

@@ -1,34 +1,5 @@
 {
-  "user_m9v9rjv4": [],
-  "user_m9v81p3e": [
-    {
-      "method": "get",
-      "url": "https://petstore.swagger.io/#/store/inventory",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "get",
-      "url": "https://jsonplaceholder.typicode.com/todos/1",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "get",
-      "url": "https://petstore.swagger.io/#/store/inventory1223131",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "get",
-      "url": "http://nodearch.e-learning.by:3050/service2?par1=555&par2=777",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
+  "user_tester": [
     {
       "method": "get",
       "url": "https://fe.it-academy.by/images/logo3.png",
@@ -56,6 +27,93 @@
       "query": [],
       "body": "",
       "headers": []
+    },
+    {
+      "method": "get",
+      "url": "http://nodearch.e-learning.by:3050/service2?par1=555",
+      "query": [
+        {
+          "par2": "777"
+        }
+      ],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "POST",
+      "url": "https://petstore.swagger.io/v2/user/createWithList",
+      "query": [],
+      "body": "[\n  {\n    \"id\": 0,\n    \"username\": \"Ivan\",\n    \"firstName\": \"Ivanov\",\n    \"lastName\": \"Ivanovich\",\n    \"email\": \"test@belpochta.by\",\n    \"password\": \"qwerty\",\n    \"phone\": \"228\",\n    \"userStatus\": 0\n  }\n]",
+      "headers": [
+        {
+          "Content-Type": "application/json"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "url": "https://petstore.swagger.io/v2/user/Ivan",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "PUT",
+      "url": "https://petstore.swagger.io/v2/user/Ivan",
+      "query": [],
+      "body": "{\n  \"id\": 9223372036854765000,\n  \"username\": \"Ivanus\",\n  \"firstName\": \"Ivanov\",\n  \"lastName\": \"Ivanovich\",\n  \"email\": \"test@belpochta.by\",\n  \"password\": \"qwerty\",\n  \"phone\": \"228228\",\n  \"userStatus\": 0\n}",
+      "headers": [
+        {
+          "Content-Type": "application/json"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "url": "https://petstore.swagger.io/v2/user/Ivanus",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "DELETE",
+      "url": "https://petstore.swagger.io/v2/user/Ivanus",
+      "query": [],
+      "body": "",
+      "headers": []
+    },
+    {
+      "method": "GET",
+      "url": "https://cdn13.deliciouspeaches.com/get/music/20220218/JP_Cooper_-_Holy_Water_73828897.mp3",
+      "query": [],
+      "body": "",
+      "headers": [
+        {
+          "Accept": "audio/mpeg"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "url": "https://filesamples.com/samples/document/txt/sample2.txt",
+      "query": [],
+      "body": "",
+      "headers": [
+        {
+          "Accept": "text/plain"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "url": "https://filesamples.com/samples/font/bin/fontawesome-webfont.bin",
+      "query": [],
+      "body": "",
+      "headers": [
+        {
+          "Accept": "application/octet-stream"
+        }
+      ]
     }
   ]
 }

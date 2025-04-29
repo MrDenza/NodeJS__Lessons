@@ -1,6 +1,5 @@
-import React from "react";
 import RowData from "./RowData";
-import './HeadersBody.css';
+import "./HeadersBody.css";
 
 const VARIANT = true;
 
@@ -8,8 +7,8 @@ function HeadersBody(props) {
 
     const allRowData = (props.data || []).map((pos, index) => {
         const keys = Object.keys(pos);
-        const keyName = keys.length > 0 ? keys[0] : '';
-        const usedOptions = props.data.map(p => Object.keys(p)[0]).filter(name => name !== keyName);
+        const keyName = keys.length > 0 ? keys[0] : "";
+        const usedOptions = props.data.map((p) => Object.keys(p)[0]).filter((name) => name !== keyName);
         return (
             <RowData
                 key={index}
@@ -26,21 +25,21 @@ function HeadersBody(props) {
     });
 
     return (
-        <div className={'head-body__box'}>
-            <span className={'head-body__title'}>Заголовки</span>
+        <div className={"head-body__box"}>
+            <span className={"head-body__title"}>Заголовки</span>
             <table>
-                {(props.data?.length > 0) && (
+                {props.data?.length > 0 && (
                     <thead>
-                    <tr>
-                        <th>Заголовок</th>
-                        <th>Значение</th>
-                        <th></th>
-                    </tr>
+                        <tr>
+                            <th>Заголовок</th>
+                            <th>Значение</th>
+                            <th></th>
+                        </tr>
                     </thead>
                 )}
                 <tbody>{allRowData}</tbody>
             </table>
-            <button onClick={eo => props.onAdd(eo, VARIANT)}>Добавить заголовок</button>
+            <button onClick={(eo) => props.onAdd(eo, VARIANT)}>Добавить заголовок</button>
         </div>
     );
 }

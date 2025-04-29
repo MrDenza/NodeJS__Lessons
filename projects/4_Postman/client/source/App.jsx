@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import FavoritesBody from "./components/favorites/FavoritesBody";
 import ControlBody from "./components/control/ControlBody";
@@ -44,74 +44,86 @@ function isRequestExists(newItem, arrList) {
     });
 }
 
+function errViewMsg(text) {
+    alert(text);
+    console.error(text);
+}
+
 function App() {
     const [dataList, setDataList] = useState([]); // []
     const [dataReq, setDataReq] = useState({}); // {}
     const [dataRes, setDataRes] = useState({}); // {}
+    const [loadingStatusList, setLoadingStatusList] = useState(false);
+    const [loadingStatusReq, setLoadingStatusReq] = useState(false);
 
     const postData = (url, callback, newData) => {
-        const idUser = window.localStorage.getItem('id');
+        const idUser = window.localStorage.getItem("id");
         const objInfo = idUser ? { id: idUser } : {};
         const bodyReq = newData ? { ...objInfo, add: newData } : objInfo;
 
-        postApi(url, bodyReq).then(data => {
-            try {
-                //const data = JSON.parse(r);
-                if (data.id) {
-                    window.localStorage.setItem('id', String(data.id));
+        postApi(url, bodyReq)
+            .then((data) => {
+                try {
+                    if (data?.id) {
+                        window.localStorage.setItem("id", String(data?.id));
+                    }
+                    if (data?.error) errViewMsg(`Ошибка: ${data?.error}`);
+                    if (Array.isArray(data?.list) && data?.list.length > 0) {
+                        callback(data?.list);
+                    }
+                    setLoadingStatusList(false);
+                } catch (e) {
+                    errViewMsg(`Ошибка загрузки раздела "Избранное": ${e}`);
                 }
-                if (Array.isArray(data.list) && data.list.length > 0) {
-                    callback(data.list);
-                }
-            } catch (e) {
-                console.error('Ошибка парсинга ответа:', e);
-            }
-        }).catch(err => {
-            console.error('Ошибка запроса:', err);
-        });
+            })
+            .catch((err) => {
+                errViewMsg(`Ошибка загрузки раздела "Избранное": ${err}`);
+            });
     };
 
-    const updateDataList = (url, addData) => {
+    const updateDataList = useCallback((url, addData) => {
         let callbackFn = (data) => {
             setDataList(data);
-        }
+        };
         postData(url, callbackFn, addData);
-    };
+    },[]);
 
     const postSendData = (url, callback, newData) => {
-        const idUser = window.localStorage.getItem('id');
-        const objInfo = idUser ? { id: idUser } : {};
-        const bodyReq = newData ? { ...objInfo, send: newData } : objInfo;
+        const infoReq = newData ? { send: newData } : {};
 
-        postApi(url, bodyReq).then(r => {
-            try {
-                //const data = JSON.parse(r);
-                // if (Array.isArray(data.list) && data.list.length > 0) {
-                callback(r);
-                // }
-            } catch (e) {
-                console.error('Ошибка парсинга ответа:', e);
-            }
-        }).catch(err => {
-            console.error('Ошибка запроса:', err);
-        });
+        postApi(url, infoReq)
+            .then((data) => {
+                if (data?.dataRes) callback(data.dataRes);
+                setLoadingStatusReq(false);
+            })
+            .catch((err) => {
+                errViewMsg(`Ошибка запроса: ${err}`);
+            });
     };
 
-    useEffect( () => {
+    useEffect(() => {
         // componentDidMount
-        updateDataList(URI_LINK.getDataList);
+        setLoadingStatusList(true);
+        updateDataList(URI_LINK.getDataList, undefined);
         return () => {
             // componentWillUnmount
-        }
-    }, []);
+        };
+    }, [updateDataList]);
 
     const sendDataReq = (sendData) => {
         let callbackFn = (data) => {
             setDataRes(data);
-        }
+        };
         postSendData(URI_LINK.sendDataReq, callbackFn, sendData);
-
+        setLoadingStatusReq(true);
         setDataReq({ ...sendData });
+    };
+
+    const resetDataRes = (key) => {
+        if (key) {
+            setDataRes({});
+            setDataReq({});
+        }
     };
 
     const saveDataReq = (data) => {
@@ -123,15 +135,25 @@ function App() {
     };
 
     const openFavoriteReq = (id) => {
+        setDataRes({});
         setDataReq(dataList[id]);
     };
 
-    //console.log(dataRes);
-
     return (
         <div className="container">
-            <FavoritesBody dataList={dataList} openPosition={openFavoriteReq} />
-            <ControlBody dataReq={dataReq} dataRes={dataRes} sendDataReq={sendDataReq} saveDataReq={saveDataReq} />
+            <FavoritesBody
+                dataList={dataList}
+                openPosition={openFavoriteReq}
+                isLoading={loadingStatusList}
+            />
+            <ControlBody
+                dataReq={dataReq}
+                dataRes={dataRes}
+                sendDataReq={sendDataReq}
+                saveDataReq={saveDataReq}
+                resetDataRes={resetDataRes}
+                isLoading={loadingStatusReq}
+            />
         </div>
     );
 }

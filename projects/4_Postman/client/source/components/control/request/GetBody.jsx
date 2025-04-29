@@ -1,29 +1,29 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import RowData from "./RowData";
-import './GetBody.css';
+import "./GetBody.css";
 
-function GetBody (props) {
+function GetBody(props) {
 
     const allGetPos = (props.data || []).map((pos, index) => {
         const keys = Object.keys(pos);
-        const keyName = keys.length > 0 ? keys[0] : '';
+        const keyName = keys.length > 0 ? keys[0] : "";
         return (
             <RowData
                 key={index}
                 id={index}
-                name={keyName || ''}
+                name={keyName || ""}
                 value={pos[keyName]}
                 onChange={props.onChange}
                 onDelete={props.onDelete}
             />
-        )
+        );
     });
 
     return (
-        <div className={'get-body__box'}>
-            <span className={'get-body__title'}>Параметры</span>
+        <div className={"get-body__box"}>
+            <span className={"get-body__title"}>Параметры</span>
             <table>
-                {(props.data?.length > 0) && (
+                {props.data?.length > 0 && (
                     <thead>
                         <tr>
                             <th>Ключ</th>
@@ -32,11 +32,15 @@ function GetBody (props) {
                         </tr>
                     </thead>
                 )}
-                <tbody>
-                    {allGetPos}
-                </tbody>
+                <tbody>{allGetPos}</tbody>
             </table>
-            <button onClick={(eo) => {props.onAdd(eo)}}>Добавить параметр</button>
+            <button
+                onClick={(eo) => {
+                    props.onAdd(eo);
+                }}
+            >
+                Добавить параметр
+            </button>
         </div>
     );
 }
