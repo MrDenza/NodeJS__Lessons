@@ -29,7 +29,7 @@ function FavoritesBody(props) {
                     <span />
                 </div>
             ) : (
-                <div dangerouslySetInnerHTML={{ __html: props.dataListHtml }} />
+                <div style={{"height": "100%"}} dangerouslySetInnerHTML={{ __html: props.dataListHtml }} />
             )}
         </div>
     );

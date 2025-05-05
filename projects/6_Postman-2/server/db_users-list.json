@@ -114,21 +114,6 @@
           "Accept": "application/octet-stream"
         }
       ]
-    },
-    {
-      "method": "get",
-      "url": "http://fe.it-academy.by/aaa123.gif",
-      "query": [],
-      "body": "",
-      "headers": []
-    },
-    {
-      "method": "get",
-      "url": "http://fe.it-academy.by/aaa1231.gif",
-      "query": [],
-      "body": "",
-      "headers": []
     }
-  ],
-  "user_mabaj70a": []
+  ]
 }

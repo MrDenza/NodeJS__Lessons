@@ -49,7 +49,7 @@ const DB_CLASSNAME_FOR_METHOD = {
 hbs.registerHelper('classNameForMethod', method => DB_CLASSNAME_FOR_METHOD[method.toUpperCase()] || '');
 
 function dataListWithId (data) {
-    return data.map((item, idx) => ({ ...item, idPos: idx, method: item.method.toUpperCase() }));
+    return data?.map((item, idx) => ({ ...item, idPos: idx, method: item.method.toUpperCase() }));
 }
 
 WEBSERVER.post("/datalist", validateAddMiddleware, (req, res) => {
