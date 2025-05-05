@@ -288,7 +288,6 @@ function ControlBox(props) {
     const handleDeleteUniversal = (eo, id, isOptions) => {
         eo.preventDefault();
         const key = isOptions ? "headers" : "query";
-        console.log(`Удалён элемент из ${key} с id: ${id + 1}`);
 
         setDataReq((prevDataReq) => {
             const deepCopy = JSON.parse(JSON.stringify(prevDataReq));

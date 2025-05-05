@@ -11,7 +11,6 @@ function downloadBlob(data, fileName) {
 
 function ViewBox(props) {
     const [expanded, setExpanded] = useState(false);
-    console.log(props.dataRes.body);
     if (props.isLoading) {
         return (
             <div className={"view-box__body"}>
