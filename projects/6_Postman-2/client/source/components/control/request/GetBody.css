@@ -1,0 +1,12 @@
+.get-body__box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+.get-body__title {
+    display: block;
+    text-align: center;
+    font-weight: bold;
+}

@@ -1,0 +1,99 @@
+.view-box__body {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px gray solid;
+    border-radius: 10px;
+    box-sizing: border-box;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    scrollbar-width: thin;
+    scrollbar-color: gray rgba(255, 0, 0, 0);
+}
+.view-box__title {
+    margin: 5px 0;
+    text-align: center;
+}
+.view-box__redirect-container {
+}
+.view-box__redirect-pos {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    align-items: stretch;
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+.view-box__redirect-pos hr {
+    width: 100%;
+}
+.view-box__res-container {
+    display: flex;
+    flex-direction: column;
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+.view-box__list {
+    margin: 0;
+}
+.view-box__res-body {
+    border: 1px gray solid;
+    border-radius: 10px;
+    max-height: 100px;
+    padding: 10px;
+    margin-bottom: 5px;
+    overflow: auto;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    scrollbar-width: thin;
+    scrollbar-color: gray rgba(255, 0, 0, 0);
+    box-sizing: border-box;
+}
+.view-box__res-preview {
+}
+.view-box__preview-iframe {
+    width: 100%;
+}
+.view-box__preview-json,
+.view-box__preview-text {
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.view-box__preview-binary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.view-box__preview-bin-text {
+    font-style: italic;
+}
+.view-box__preview-img {
+    max-width: 100%;
+    margin-top: 10px;
+}
+.view-box__preview-audio {
+    width: 100%;
+}
+.view-box__preview-video {
+}
+.view-box__preview-other {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.view-box__preview-box-btn {
+    padding: 10px 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+}
+.view-box__preview-btn {
+    width: 125px;
+}
+.view-box__preview-textarea {
+    resize: vertical;
+}

@@ -1,0 +1,75 @@
+.favorite-box {
+    width: 30%;
+    margin: 5px;
+    padding: 10px 3px;
+    border: 1px gray solid;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: darksalmon;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.favorite-box__title {
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.favorite-box__list {
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 0 10px 0 15px;
+    scrollbar-width: thin;
+    scrollbar-color: gray rgba(255, 0, 0, 0);
+    box-sizing: border-box;
+}
+
+.favorite-pos {
+    width: 100%;
+    border: 1px gray solid;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    background-color: darkgray;
+    transform: scale(1);
+    transition: transform 0.5s ease;
+}
+.favorite-pos:hover {
+    transform: scale(1.03);
+}
+.favorite-pos_text-bold {
+    font-weight: bold;
+}
+.favorite-pos_ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.favorite-pos_get {
+    background-color: mediumseagreen;
+}
+.favorite-pos_post {
+    background-color: yellow;
+}
+.favorite-pos_put {
+    background-color: deepskyblue;
+}
+.favorite-pos_patch {
+    background-color: mediumpurple;
+}
+.favorite-pos_delete {
+    background-color: indianred;
+}
+.favorite-pos_head {
+    background-color: lawngreen;
+}
+.favorite-pos_options {
+    background-color: hotpink;
+}

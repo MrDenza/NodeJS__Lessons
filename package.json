@@ -23,11 +23,13 @@
     "project2-dev": "npm run dev --workspace=projects/2_Validation/server",
     "project3-dev": "concurrently \"npm run dev --workspace=projects/3_Vote-2/server\" \"npm run start --workspace=projects/3_Vote-2/client\"",
     "project4-dev": "concurrently \"npm run dev --workspace=projects/4_Postman/server\" \"npm run start --workspace=projects/4_Postman/client\"",
-    "project5-dev": "npm run dev --workspace=projects/5_Validation-2/server"
+    "project5-dev": "npm run dev --workspace=projects/5_Validation-2/server",
+    "project6-dev": "concurrently \"npm run dev --workspace=projects/6_Postman-2/server\" \"npm run start --workspace=projects/6_Postman-2/client\""
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
+    "hbs": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
