@@ -210,12 +210,16 @@ async function main () {
 
     console.log();
     log('info', 'DIRECTORY-SCAN', 'Сканирование директории...');
+    const start = Date.now(); // фиксируем время старта
     for await (const filePath of walk(userPath)) {
         if (filePath.endsWith('.gz')) continue;
         await processFile(filePath);
     }
+    const end = Date.now(); // фиксируем время окончания
+    const duration = end - start; // разница в миллисекундах
 
     console.log();
+    log('warn', 'COMPRESS-TIMER', `Обработка файлов заняла ${duration} мс`);
     log('success', 'AUTO-COMPRESSOR', 'Все файлы обработаны!');
 }
 
