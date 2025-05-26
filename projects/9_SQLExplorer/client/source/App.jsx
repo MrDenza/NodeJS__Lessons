@@ -39,8 +39,6 @@ function App() {
         postData(URI_LINK.sendSqlQuery, dataQuery, callbackFn);
     },[]);
 
-    console.log(result);
-
     return (
         <div className="container">
             <h1 className="app__title">SQLExplorer</h1>
