@@ -1,4 +1,5 @@
 import './ProgressButton.css';
+import { memo } from "react";
 
 function ProgressButton({ isLoading, progress, children, ...props }) {
     return (
@@ -15,4 +16,4 @@ function ProgressButton({ isLoading, progress, children, ...props }) {
     );
 }
 
-export default ProgressButton;
+export default memo(ProgressButton);

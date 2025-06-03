@@ -93,6 +93,9 @@ app.post('/upload',checkUidMiddleware, async (req, res) => {
         }
 
         let fileName = getDecodedHeader(req.headers, 'x-file-name', `file_${Date.now()}`);
+        if (fileName.includes('..') || path.isAbsolute(fileName)) {
+            return res.status(400).json({status: "error", error: 'Недопустимое имя файла!'});
+        }
         const userDir = path.join(UPLOAD_FILES_PATH, uid);
         await fsAsync.mkdir(userDir, { recursive: true });
         fileName = await getUniqueFileName(userDir, fileName);
@@ -153,7 +156,7 @@ app.post('/download', checkUidMiddleware, async (req, res) => {
     const { fileName, type} = req.body;
     const uid = req.uid;
 
-    if (type !== 'downloadFile' || !fileName) {
+    if (type !== 'downloadFile' || !fileName || fileName.includes('..') || path.isAbsolute(fileName)) {
         return res.status(400).json({status: "error", error: 'Неверный запрос!'});
     }
 
@@ -163,7 +166,9 @@ app.post('/download', checkUidMiddleware, async (req, res) => {
     res.download(filePath, fileName, (err) => {
         if (err) {
             console.error(err);
-            return res.status(404).json({status: "error", error: 'Файл не найден!'});
+            if (!res.headersSent) {
+                res.status(404).json({status: "error", error: 'Файл не найден!'});
+            }
         }
     });
 });
@@ -204,33 +209,16 @@ function generateUserId() {
     return "user_" + (Date.now() + Math.floor(Math.random() * 10000)).toString(36);
 }
 
-function logLineAsync(logFilePath, logLine) {
-    return new Promise((resolve) => { // убираем reject, чтобы promise всегда resolve
-        const logDT = new Date();
-        let time = logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
-        let fullLogLine = time + " " + logLine;
-        console.log(fullLogLine);
-
-        fs.open(logFilePath, "a+", (err, logFd) => {
-            if (err) {
-                console.error('Ошибка открытия файла логов:', err);
-                return resolve();
-            }
-            fs.write(logFd, fullLogLine + os.EOL, (err) => {
-                if (err) {
-                    console.error('Ошибка записи в файл логов:', err);
-                    fs.close(logFd, () => resolve());
-                } else {
-                    fs.close(logFd, (err) => {
-                        if (err) {
-                            console.error('Ошибка закрытия файла логов:', err);
-                        }
-                        resolve();
-                    });
-                }
-            });
-        });
-    });
+async function logLineAsync(logFilePath, logLine) {
+    const logDT = new Date();
+    let time = logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
+    let fullLogLine = time + " " + logLine;
+    console.log(fullLogLine);
+    try {
+        await fsAsync.appendFile(logFilePath, fullLogLine + os.EOL, 'utf8');
+    } catch (err) {
+        console.error('Ошибка записи в файл логов:', err);
+    }
 }
 
 function getDecodedHeader(headers, name, defaultValue = '') {
@@ -250,15 +238,15 @@ async function getUniqueFileName(dir, originalFileName) {
     const ext = path.extname(originalFileName); // расширение файла
     const baseName = path.basename(originalFileName, ext); // имя без расширения
 
-    let fileName = originalFileName;
-    let filePath = path.join(dir, fileName);
-    let counter = 1;
-
-    while (await fileExists(filePath)) {
-        fileName = `${baseName}(${counter})${ext}`;
+    let counter = 0;
+    let fileName, filePath;
+    do {
+        fileName = counter === 0
+            ? originalFileName
+            : `${baseName}(${counter})${ext}`;
         filePath = path.join(dir, fileName);
         counter++;
-    }
+    } while (await fileExists(filePath));
     return fileName;
 }
 
