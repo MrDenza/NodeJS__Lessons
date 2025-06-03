@@ -180,6 +180,12 @@ app.use( async (req, res) => {
 
 // -------------------- Body WebSocket Server --------------------
 wss.on('connection', (ws, request) => {
+    ws.isAlive = true;
+
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
+
     ws.on('message', message => {
         try {
             const dataStr = typeof message === 'string' ? message : message.toString();
@@ -188,7 +194,7 @@ wss.on('connection', (ws, request) => {
                 // Связываем ws с uid
                 wsClients.set(data.uid, ws);
                 ws.uid = data.uid;
-                logLineAsync(LOG_FILE_PATH, `[${request.socket.remoteAddress}]-[WS] - Новое соединение! UID: ${ws.uid}`).then();
+                logLineAsync(LOG_FILE_PATH, `[${request.socket.remoteAddress}]-[WS] - Новое соединение! UID: ${ws.uid}`).catch();
             }
         } catch (e) {
             console.error('Ошибка парсинга сообщения WebSocket:', e);
@@ -198,12 +204,33 @@ wss.on('connection', (ws, request) => {
     ws.on('close', () => {
         if (ws.uid) {
             wsClients.delete(ws.uid);
-            console.log(`WebSocket disconnected: uid=${ws.uid}`);
+            logLineAsync(LOG_FILE_PATH, `[${request.socket.remoteAddress}]-[WS] - Соединение закрыто! UID: ${ws.uid}`).catch();
         }
     });
 
     ws.on('error', (err) => console.error('Ошибка WebSocket:', err));
 });
+
+setInterval(() => {
+    logLineAsync(LOG_FILE_PATH, `[WS][AUTO-CLEANER] - Автоматическая проверка доступности клиентов и очистка...`).catch();
+    // Проверяем все WebSocket-соединения
+    wss.clients.forEach((ws) => {
+        if (!ws.isAlive) {
+            logLineAsync(LOG_FILE_PATH, `[WS][AUTO-CLEANER] - Закрываем неактивное соединение: ${ws.uid}`).catch();
+            ws.terminate();
+        } else {
+            ws.isAlive = false;
+            ws.ping();
+        }
+    });
+    // Очищаем карту wsClients от закрытых соединений
+    for (const [uid, ws] of wsClients.entries()) {
+        if (ws.readyState !== WebSocket.OPEN) {
+            logLineAsync(LOG_FILE_PATH, `[WS][AUTO-CLEANER] - Удаляем неактивного клиента из списка wsClients: ${ws.uid}`).catch();
+            wsClients.delete(uid);
+        }
+    }
+}, 300 * 1000); // каждые 5 мин
 // -------------------------- Function ---------------------------
 function generateUserId() {
     return "user_" + (Date.now() + Math.floor(Math.random() * 10000)).toString(36);
