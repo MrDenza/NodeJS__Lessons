@@ -160,7 +160,7 @@ app.post('/download', checkUidMiddleware, async (req, res) => {
         return res.status(400).json({status: "error", error: 'Неверный запрос!'});
     }
 
-    await logLineAsync(LOG_FILE_PATH, `[${req.ip}]-[${req.method}]][${req.path}][ERROR] - Запрошен файл: ${fileName}`);
+    await logLineAsync(LOG_FILE_PATH, `[${req.ip}]-[${req.method}]][${req.path}][SEND] - Запрошен файл: ${fileName}`);
 
     const filePath = path.join(UPLOAD_FILES_PATH, uid, fileName);
     res.download(filePath, fileName, (err) => {
