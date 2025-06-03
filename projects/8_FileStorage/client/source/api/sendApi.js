@@ -1,5 +1,6 @@
 "use strict"; // Строгий режим
 // ----------------------- JavaScript -----------------------
+const PROXY_API_PATH = import.meta.env.VITE_PROXY_API_PATH || "";
 /**
  * Универсальная функция для HTTP-запросов с телом (POST, PUT, PATCH, DELETE).
  *
