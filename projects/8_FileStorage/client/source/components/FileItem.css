@@ -1,0 +1,81 @@
+/* ------------------------- Style -------------------------- */
+.app__file-item {
+	border: 2px solid #009879;
+	border-radius: 10px;
+	box-shadow: 0 0 6px rgba(0, 152, 121, 0.5);
+	padding: 16px 20px;
+	margin-bottom: 18px;
+	background-color: #f7fdf9;
+	transition: box-shadow 0.3s ease;
+	user-select: none;
+	width: 100%;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+.app__file-item:hover {
+	box-shadow: 0 0 14px rgba(0, 152, 121, 0.8);
+}
+.app__file-item-box {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+}
+.app__file-item-box > div:first-child {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 70px;
+	gap: 8px;
+}
+.app__file-item-img {
+	width: 50px;
+	height: 50px;
+	cursor: pointer;
+	border-radius: 6px;
+	transition: transform 0.2s ease;
+}
+.app__file-item-img:hover {
+	transform: scale(1.1);
+}
+.app__file-info-size {
+	font-size: 13px;
+	color: #007a5e;
+	font-weight: 600;
+	user-select: text;
+}
+.app__file-info-box {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex-grow: 1;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	color: #004d40;
+	font-size: 15px;
+	overflow-wrap: break-word;
+}
+.app__file-info-name {
+	font-weight: 700;
+	white-space: normal;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	overflow: hidden;
+	color: black;
+}
+.app__file-info-box span:nth-child(2) {
+	font-size: 13px;
+	color: #00695c;
+	user-select: text;
+}
+.app__file-comment {
+	margin-top: 12px;
+	font-style: italic;
+	font-size: 14px;
+	color: #00503d;
+	user-select: text;
+	border-top: 1px solid gray;
+	padding-top: 10px;
+	word-break: break-word;
+}
+.app__file-comment b {
+	color: black;
+}

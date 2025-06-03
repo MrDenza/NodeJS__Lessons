@@ -26,15 +26,18 @@
     "project5-dev": "npm run dev --workspace=projects/5_Validation-2/server",
     "project6-dev": "concurrently \"npm run dev --workspace=projects/6_Postman-2/server\" \"npm run start --workspace=projects/6_Postman-2/client\"",
     "project7-dev": "npm run dev --workspace=projects/7_AutoCompressor/server",
+    "project8-dev": "concurrently \"npm run dev --workspace=projects/8_FileStorage/server\" \"npm run start --workspace=projects/8_FileStorage/client\"",
     "project9-dev": "concurrently \"npm run dev --workspace=projects/9_SQLExplorer/server\" \"npm run start --workspace=projects/9_SQLExplorer/client\""
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
     "hbs": "^4.2.0",
+    "http": "^0.0.1-security",
     "mysql": "^2.18.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
