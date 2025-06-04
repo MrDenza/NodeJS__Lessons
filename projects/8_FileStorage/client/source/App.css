@@ -29,6 +29,12 @@
     background-color: #009879;
     color: #ffffff;
 }
+.app__err-msg {
+    display: block;
+    text-align: center;
+    color: red;
+    font-weight: bold;
+}
 /* ----- Global Animation ----- */
 .animation__dot-pulse {
     display: flex;

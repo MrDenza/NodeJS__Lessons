@@ -143,6 +143,7 @@ app.post('/upload',checkUidMiddleware, async (req, res) => {
             });
 
             await fsAsync.writeFile(userListFile, JSON.stringify(info, null, 2), 'utf8');
+            sendEndUpload(uid, true);
             await logLineAsync(LOG_FILE_PATH, `[${req.ip}]-[${req.method}][${req.path}] - Загружен файл: ${fileName} / Размер: ${receivedBytes} / Комментарий: ${comment}`);
             res.json({status: "success", uid: uid, fileList: info});
         })
@@ -300,9 +301,19 @@ async function writeUsers(users) {
     await fsAsync.writeFile(USERS_FILE_PATH, JSON.stringify(users, null, 2), 'utf8');
 }
 
-function sendUploadProgress(uid, progress) {
+function sendWsMessage(uid, message) {
     const ws = wsClients.get(uid);
     if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'uploadProgress', progress }));
+        ws.send(JSON.stringify(message));
+    }
+}
+
+function sendUploadProgress(uid, progress) {
+    sendWsMessage(uid, { type: 'uploadProgress', progress });
+}
+
+function sendEndUpload(uid, close = false) {
+    if (close) {
+        sendWsMessage(uid, { type: 'endUpload' });
     }
 }

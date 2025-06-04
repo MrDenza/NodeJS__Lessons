@@ -9,8 +9,8 @@ const URI_LINK = {
     sessionInfo: "/session-info",
     downloadFile: "/download"
 };
-const MAX_RECONNECT_ATTEMPTS = 5;
-const RECONNECT_INTERVAL = 3000;
+const WS_MAX_RECONNECT_ATTEMPTS = 3;
+const WS_RECONNECT_INTERVAL = 3000;
 
 function buildHeaders(obj) {
     return Object.fromEntries(
@@ -36,55 +36,65 @@ function safeEncode(value) {
     return encodeURIComponent(String(value));
 }
 
+const parseWebSocketMessage = (event) => {
+    try {
+        return JSON.parse(event.data);
+    } catch {
+        console.log(event.data);
+        return null;
+    }
+};
+
 function App() {
 
     const [progressUpload, setProgressUpload] = useState(0);
     const [isLoadingFile, setIsLoadingFile] = useState(false);
+    const [errMsg, setErrMsg] = useState('');
     const [fileList, setFileList] = useState([]);
     const [uid, setUid] = useState(() => localStorage.getItem("uid") || null);
     const [wsUrl, setWsUrl] = useState(null);
     const ws = useRef(null);
-    const reconnectAttempts = useRef(0);
-    const reconnectTimeout = useRef(null);
+    const shouldReconnect = useRef(true);
 
-    const connect = useCallback(() => {
-        if (!uid || !wsUrl) return;
-        ws.current = new WebSocket(wsUrl);
-        ws.current.onopen = () => {
-            reconnectAttempts.current = 0;
-            console.log('WebSocket соединение установлено!');
-            if (uid) ws.current.send(JSON.stringify({ type: 'register', uid }));
-        };
-        ws.current.onmessage = (event) => {
-            let message;
-            try {
-                message = JSON.parse(event.data);
-            } catch {
-                console.log(event.data);
-                return;
-            }
-            if (typeof message === 'object' && message !== null && message.type === 'uploadProgress') {
-                setProgressUpload(message.progress);
-            } else if (typeof message === 'string') {
-                console.log(message);
-            }
-        };
+    const connectWebSocket = useCallback((maxAttempts = 3, timeAttempt = 3000, attempt = 1) => {
+        return new Promise((resolve, reject) => {
+            const socket = new WebSocket(wsUrl);
 
-        ws.current.onclose = () => {
-            console.log('WebSocket соединение закрыто!');
-            if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-                reconnectAttempts.current++;
-                reconnectTimeout.current = setTimeout(() => {
-                    console.log(`Попытка переподключения #${reconnectAttempts.current}`);
-                    connect();
-                }, RECONNECT_INTERVAL);
-            }
-        };
-        ws.current.onerror = (error) => {
-            console.error('Ошибка WebSocket: ', error);
-            ws.current.close();
-        };
-    }, [uid, wsUrl])
+            const timeoutId = setTimeout(() => {
+                socket.close();
+                if (attempt < maxAttempts) {
+                    console.log(`[WebSocket] Попытка подключения #${attempt} не удалась, пробуем снова...`);
+                    resolve(connectWebSocket(maxAttempts, attempt + 1));
+                } else {
+                    reject(new Error('Не удалось установить соединение с сервером (3 попытки).'));
+                }
+            }, timeAttempt); // Таймаут на подключение
+
+            socket.onopen = () => {
+                clearTimeout(timeoutId);
+                console.log('[WebSocket] Соединение установлено.');
+                if (uid) socket.send(JSON.stringify({ type: 'register', uid }));
+                resolve(socket);
+            };
+
+            socket.onerror = (err) => {
+                console.error('[WebSocket] Ошибка:', err);
+                socket.close();
+            };
+
+            socket.onclose = () => {
+                clearTimeout(timeoutId);
+                if (shouldReconnect.current) {
+                    if (attempt < maxAttempts) {
+                        console.log(`[WebSocket] Соединение закрыто, попытка #${attempt} не удалась, повторяем...`);
+                        resolve(connectWebSocket(maxAttempts, timeAttempt, attempt + 1));
+                    } else {
+                        reject(new Error('Не удалось установить соединение с сервером.'));
+                    }
+                }
+            };
+        });
+    }, [uid, wsUrl]);
 
     const updateUid = (newUid) => {
         setUid(newUid);
@@ -122,13 +132,38 @@ function App() {
         setProgressUpload(0);
         setIsLoadingFile(true);
 
-        const headers = buildHeaders({
-            'x-user-uid': safeEncode(uid),
-            'x-file-comment': comment ? encodeURIComponent(comment) : undefined,
-            'x-file-name': file?.name ? encodeURIComponent(file.name) : undefined,
-        });
+        if (!uid || !wsUrl) {
+            console.error('[WebSocket] Невозможно открыть соединение.');
+            setIsLoadingFile(false);
+            return;
+        }
+
+        shouldReconnect.current = true;
 
         try {
+            ws.current = await connectWebSocket(WS_MAX_RECONNECT_ATTEMPTS, WS_RECONNECT_INTERVAL);
+
+            ws.current.onmessage = (event) => {
+                const message = parseWebSocketMessage(event);
+                if (message.type === 'uploadProgress') {
+                    setProgressUpload(message.progress);
+                }
+                if (message.type === 'endUpload') {
+                    shouldReconnect.current = false;
+                    if (ws.current) {
+                        ws.current.close();
+                        ws.current = null;
+                    }
+                }
+            };
+
+            setErrMsg('');
+            const headers = buildHeaders({
+                'x-user-uid': safeEncode(uid),
+                'x-file-comment': comment ? encodeURIComponent(comment) : undefined,
+                'x-file-name': file?.name ? encodeURIComponent(file.name) : undefined,
+            });
+
             const data = await postApi(URI_LINK.sendFile, file, { headers });
             if (data.status === 'success') {
                 console.log('Файл успешно загружен!');
@@ -137,11 +172,12 @@ function App() {
                 form.reset();
             }
         } catch (error) {
-            console.error('Ошибка при загрузке файла:', error);
+            console.error('Ошибка при загрузке файла: ', error);
+            setErrMsg(/^[А-Яа-яЁё]/.test(String(error).trim()) ? `Ошибка: ${error}` : 'Ошибка отправки файла!');
             setProgressUpload(0);
             setIsLoadingFile(false);
         }
-    }, [uid])
+    }, [connectWebSocket, uid, wsUrl]);
 
     const downloadFile = useCallback(async (fileName) => {
         const headers = buildHeaders({
@@ -171,34 +207,46 @@ function App() {
         })();
     }, [fetchSessionInfo]);
 
-    useEffect(() => {
-        if (!uid) return;
-
-        connect();
-
-        return () => {
-            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
-            if (ws.current) ws.current.close();
-        };
-    }, [connect, uid]);
+    // useEffect(() => {
+    //     if (!uid) return;
+    //
+    //     connect();
+    //
+    //     return () => {
+    //         if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+    //         if (ws.current) ws.current.close();
+    //     };
+    // }, [connect, uid]);
 
     useEffect(() => {
         if (progressUpload === 100) {
             // Плавная анимация до 100%
-            const timeout = setTimeout(() => {
+            const timeout1 = setTimeout(() => {
                 setProgressUpload(0);
                 setIsLoadingFile(false);
             }, 300);
 
-            return () => clearTimeout(timeout);
+            return () => clearTimeout(timeout1);
         }
     }, [progressUpload]);
+
+    useEffect(() => {
+        if (errMsg.trim().length > 0) {
+            // Убираем сообщение ошибки по таймеру
+            const timeout2 = setTimeout(() => {
+                setErrMsg('');
+            }, 7000);
+
+            return () => clearTimeout(timeout2);
+        }
+    }, [errMsg]);
 
     return (
         <div className="container">
             <div className="app__box">
                 <h1 className="app__title">FreeCloud</h1>
                 <Form sendForm={fetchSendForm} progress={progressUpload} isLoading={isLoadingFile}/>
+                <span className={"app__err-msg"}>{errMsg}</span>
                 <hr/>
                 <FilesList fileList={fileList} downloadFile={downloadFile}/>
             </div>
